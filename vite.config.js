@@ -1,4 +1,3 @@
-// vite.config.js
 export default {
-    base: './'
-}
+    base: '/MysteryGift/', // Must match your repository name exactly, including case
+  }
