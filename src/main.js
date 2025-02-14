@@ -1,86 +1,183 @@
 import * as THREE from 'three';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 
 // Base class for game objects
 class GameObject {
     constructor() {
         this.mesh = null;
+        this.mixer = null; // For FBX animations
     }
 
     update(deltaTime) {
-        // Override this in child classes
+        // Update animations if they exist
+        if (this.mixer) {
+            this.mixer.update(deltaTime);
+        }
     }
 }
 
-// Our rotating cube game object
+// FBX Model game object
+class FBXModel extends GameObject {
+    constructor(path, options = {}) {
+        super();
+        this.path = path;
+        this.options = {
+            scale: 1,
+            position: new THREE.Vector3(0, 0, 0),
+            rotation: new THREE.Euler(0, 0, 0),
+            ...options
+        };
+        this.isLoaded = false;
+        this.onLoadCallback = null;
+    }
+
+    load(scene, loadingManager) {
+        const loader = new FBXLoader(loadingManager);
+        
+        loader.load(this.path, (fbx) => {
+            this.mesh = fbx;
+            
+            // Apply transforms
+            this.mesh.scale.multiplyScalar(this.options.scale);
+            this.mesh.position.copy(this.options.position);
+            this.mesh.rotation.copy(this.options.rotation);
+
+            // Setup animations if they exist
+            if (fbx.animations && fbx.animations.length) {
+                this.mixer = new THREE.AnimationMixer(fbx);
+                const action = this.mixer.clipAction(fbx.animations[0]);
+                action.play();
+            }
+
+            // Setup shadows
+            fbx.traverse((child) => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+
+            scene.add(this.mesh);
+            this.isLoaded = true;
+            
+            if (this.onLoadCallback) {
+                this.onLoadCallback(this);
+            }
+        });
+    }
+
+    onLoad(callback) {
+        this.onLoadCallback = callback;
+        if (this.isLoaded && callback) {
+            callback(this);
+        }
+    }
+}
+
+// Your existing RotatingCube class remains the same
 class RotatingCube extends GameObject {
     constructor() {
         super();
-        // Create the cube (this is like adding components in Unity)
         const geometry = new THREE.BoxGeometry();
         const material = new THREE.MeshPhongMaterial({ color: 0xffff00 });
         this.mesh = new THREE.Mesh(geometry, material);
-        
-        // Set initial properties
-        this.rotationSpeed = 1.0; // Rotations per second
+        this.rotationSpeed = 1.0;
     }
 
     update(deltaTime) {
-        // Update rotation based on delta time (just like Unity)
         this.mesh.rotation.x += this.rotationSpeed * deltaTime;
         this.mesh.rotation.y += this.rotationSpeed * deltaTime;
     }
 }
 
-// Main game class (like a GameManager)
+// Enhanced Game class
 class Game {
     constructor() {
         this.lastTime = 0;
         this.gameObjects = [];
+        this.loadingManager = new THREE.LoadingManager();
+        this.setupLoadingManager();
         this.setupScene();
     }
 
+    setupLoadingManager() {
+        this.loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
+            console.log(`Loading: ${itemsLoaded}/${itemsTotal}`);
+        };
+        
+        this.loadingManager.onError = (url) => {
+            console.error('Error loading:', url);
+        };
+    }
+
     setupScene() {
-        // Scene setup (like a scene in Unity)
+        // Scene setup
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x000000);
+        this.scene.fog = new THREE.Fog(0xa0a0a0, 200, 1000);
 
-        // Camera setup (like adding a camera in Unity)
+        // Enhanced camera setup
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.camera.position.z = 5;
+        this.camera.position.set(0, 0, 5);
 
-        // Renderer setup
-        this.renderer = new THREE.WebGLRenderer();
+        // Enhanced renderer setup
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.shadowMap.enabled = true;
         
         // Add renderer to DOM
-        this.renderer.domElement.style.position = 'fixed';
-        this.renderer.domElement.style.top = '0';
-        this.renderer.domElement.style.left = '0';
         document.body.appendChild(this.renderer.domElement);
 
-        // Add lights (like adding lights in Unity)
-        const mainLight = new THREE.DirectionalLight(0xffffff, 1.5);
-        mainLight.position.set(10, 10, 10);
-        this.scene.add(mainLight);
-        this.scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+        // Enhanced lighting
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 5);
+        hemiLight.position.set(0, 200, 0);
+        this.scene.add(hemiLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 5);
+        dirLight.position.set(0, 200, 100);
+        dirLight.castShadow = true;
+        dirLight.shadow.camera.top = 180;
+        dirLight.shadow.camera.bottom = -100;
+        dirLight.shadow.camera.left = -120;
+        dirLight.shadow.camera.right = 120;
+        this.scene.add(dirLight);
+
+        // Ground plane
+        const ground = new THREE.Mesh(
+            new THREE.PlaneGeometry(2000, 2000),
+            new THREE.MeshPhongMaterial({ color: 0x999999, depthWrite: false })
+        );
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        this.scene.add(ground);
+
+        // Grid helper
+        const grid = new THREE.GridHelper(2000, 20, 0x000000, 0x000000);
+        grid.material.opacity = 0.2;
+        grid.material.transparent = true;
+        this.scene.add(grid);
 
         // Handle window resizing
         window.addEventListener('resize', () => this.onWindowResize());
 
-        // Create initial game objects
+        // Create initial objects
         this.createInitialObjects();
     }
 
     createInitialObjects() {
-        // Create a cube (like instantiating a prefab)
-        const cube = new RotatingCube();
-        this.addGameObject(cube);
+        // Example of loading an FBX model
+        const characterModel = new FBXModel('models/fbx/bobdance.fbx', {
+            scale: .15,
+            position: new THREE.Vector3(0, -1, 0)
+        });
+        this.addGameObject(characterModel);
+        characterModel.load(this.scene, this.loadingManager);
     }
 
     addGameObject(gameObject) {
         this.gameObjects.push(gameObject);
-        if (gameObject.mesh) {
+        if (gameObject.mesh && !gameObject.path) { // Only add mesh directly if it's not an FBX (those add themselves when loaded)
             this.scene.add(gameObject.mesh);
         }
     }
@@ -91,9 +188,7 @@ class Game {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    // Game loop (like Unity's Update)
     update(currentTime) {
-        // Calculate delta time in seconds
         const deltaTime = (currentTime - this.lastTime) / 1000;
         this.lastTime = currentTime;
 
@@ -109,7 +204,6 @@ class Game {
         requestAnimationFrame((time) => this.update(time));
     }
 
-    // Start the game
     start() {
         // Prevent scrolling/bouncing on mobile
         document.body.style.margin = '0';
