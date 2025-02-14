@@ -168,7 +168,10 @@ class Game {
 
     createInitialObjects() {
         // Example of loading an FBX model
-        const characterModel = new FBXModel('models/fbx/bobdance.fbx', {
+        const modelPath = window.location.hostname === 'localhost'
+        ? 'public/models/fbx/bobdance.fbx'             // Local development
+        : '/MysteryGift/models/fbx/bobdance.fbx'; // Production/GitHub Pages
+        const characterModel = new FBXModel(modelPath, {
             scale: .15,
             position: new THREE.Vector3(0, -1, 0)
         });
