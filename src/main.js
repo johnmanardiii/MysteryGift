@@ -144,15 +144,6 @@ class Game {
         dirLight.shadow.camera.right = 120;
         this.scene.add(dirLight);
 
-        // Ground plane
-        const ground = new THREE.Mesh(
-            new THREE.PlaneGeometry(2000, 2000),
-            new THREE.MeshPhongMaterial({ color: 0x999999, depthWrite: false })
-        );
-        ground.rotation.x = -Math.PI / 2;
-        ground.receiveShadow = true;
-        this.scene.add(ground);
-
         // Grid helper
         const grid = new THREE.GridHelper(2000, 20, 0x000000, 0x000000);
         grid.material.opacity = 0.2;
