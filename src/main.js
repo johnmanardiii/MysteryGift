@@ -96,6 +96,7 @@ class Game {
         this.lastTime = 0;
         this.gameObjects = [];
         this.loadingManager = new THREE.LoadingManager();
+        this.basePath = location.hostname === 'localhost' ? '' : '/MysteryGift';
         this.setupLoadingManager();
         this.setupScene();
     }
