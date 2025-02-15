@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { FBXModel } from './objects/FBXModel';
+import { Bob } from './objects/Bob';
 import { GameObject } from './objects/GameObject';
 
 // Enhanced Game class
@@ -84,13 +84,9 @@ class Game {
         const modelPath = window.location.hostname === 'localhost'
         ? '/models/fbx/bobdance.fbx'             // Local development
         : '/MysteryGift/models/fbx/bobdance.fbx'; // Production/GitHub Pages
-        const characterModel = new FBXModel(modelPath, {
-            scale: .15,
-            position: new THREE.Vector3(0, -1, 0),
-            usesBasicMaterial: true
-        });
-        this.addGameObject(characterModel);
-        characterModel.load(this.scene, this.loadingManager);
+        this.bob = new Bob(modelPath);
+        this.addGameObject(this.bob);
+        this.bob.load(this.scene, this.loadingManager);
     }
 
     addGameObject(gameObject) {
@@ -116,6 +112,10 @@ class Game {
 
         // todo: do if tapped -> show bob face and spawn a bob for this.bob
         //      if untapped -> show other bob face to test tapping / facial swap.
+        if(this.isTapped && !this.tappedLastFrame)
+        {
+            this.bob.waveOnce();
+        }
 
         // Update all game objects
         for (const obj of this.gameObjects) {
