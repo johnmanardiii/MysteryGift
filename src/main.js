@@ -144,12 +144,6 @@ class Game {
         dirLight.shadow.camera.right = 120;
         this.scene.add(dirLight);
 
-        // Grid helper
-        const grid = new THREE.GridHelper(2000, 20, 0x000000, 0x000000);
-        grid.material.opacity = 0.2;
-        grid.material.transparent = true;
-        this.scene.add(grid);
-
         // Handle window resizing
         window.addEventListener('resize', () => this.onWindowResize());
 
