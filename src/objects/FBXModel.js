@@ -10,6 +10,7 @@ export class FBXModel extends GameObject {
             scale: 1,
             position: new THREE.Vector3(0, 0, 0),
             rotation: new THREE.Euler(0, 0, 0),
+            useBasicMaterial: true,  // Add this option
             ...options
         };
         this.isLoaded = false;
@@ -22,7 +23,7 @@ export class FBXModel extends GameObject {
         loader.load(this.path, (fbx) => {
             this.mesh = fbx;
             
-            // Apply transforms~
+            // Apply transforms
             this.mesh.scale.multiplyScalar(this.options.scale);
             this.mesh.position.copy(this.options.position);
             this.mesh.rotation.copy(this.options.rotation);
@@ -34,11 +35,19 @@ export class FBXModel extends GameObject {
                 action.play();
             }
 
-            // Setup shadows
+            // Setup materials
             fbx.traverse((child) => {
                 if (child.isMesh) {
-                    child.castShadow = true;
-                    child.receiveShadow = true;
+                    if (this.options.useBasicMaterial) {
+                        // Create a basic material that just shows the texture
+                        const basicMaterial = new THREE.MeshBasicMaterial({
+                            map: child.material.map,
+                            transparent: true,
+                            side: THREE.DoubleSide
+                        });
+                        child.material = basicMaterial;
+                    }
+                    console.log('Mesh name:', child.name); // Debug mesh names
                 }
             });
 
@@ -49,12 +58,5 @@ export class FBXModel extends GameObject {
                 this.onLoadCallback(this);
             }
         });
-    }
-
-    onLoad(callback) {
-        this.onLoadCallback = callback;
-        if (this.isLoaded && callback) {
-            callback(this);
-        }
     }
 }

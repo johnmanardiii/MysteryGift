@@ -11,6 +11,22 @@ class Game {
         this.basePath = location.hostname === 'localhost' ? '' : '/MysteryGift';
         this.setupLoadingManager();
         this.setupScene();
+
+        this.tapPosition = { x: 0, y: 0 };
+        this.isTapped = false;
+        this.tappedLastFrame = false;
+        
+        document.addEventListener('touchstart', (event) => {
+            this.isTapped = true;
+            // Get the first touch position
+            const touch = event.touches[0];
+            this.tapPosition.x = (touch.clientX / window.innerWidth) * 2 - 1;
+            this.tapPosition.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+        });
+        
+        document.addEventListener('touchend', () => {
+            this.isTapped = false;
+        });
     }
 
     setupLoadingManager() {
@@ -70,7 +86,8 @@ class Game {
         : '/MysteryGift/models/fbx/bobdance.fbx'; // Production/GitHub Pages
         const characterModel = new FBXModel(modelPath, {
             scale: .15,
-            position: new THREE.Vector3(0, -1, 0)
+            position: new THREE.Vector3(0, -1, 0),
+            usesBasicMaterial: true
         });
         this.addGameObject(characterModel);
         characterModel.load(this.scene, this.loadingManager);
@@ -93,6 +110,13 @@ class Game {
         const deltaTime = (currentTime - this.lastTime) / 1000;
         this.lastTime = currentTime;
 
+        if (this.isTapped) {
+            console.log('Tapped at:', this.tapPosition);
+        }
+
+        // todo: do if tapped -> show bob face and spawn a bob for this.bob
+        //      if untapped -> show other bob face to test tapping / facial swap.
+
         // Update all game objects
         for (const obj of this.gameObjects) {
             obj.update(deltaTime);
@@ -100,6 +124,8 @@ class Game {
 
         // Render the scene
         this.renderer.render(this.scene, this.camera);
+
+        this.tappedLastFrame = this.isTapped;
 
         // Queue next frame
         requestAnimationFrame((time) => this.update(time));
