@@ -41,6 +41,7 @@ export class FBXModel extends GameObject {
     playAnimationSequence(index = 0, nextIndex = 1) {
         if (this.animations && this.animations.length > index) {
             if (this.currentAction) {
+                print(this.currentAction);
                 this.currentAction.stop();
             }
             this.currentAction = this.mixer.clipAction(this.animations[index]);
@@ -118,5 +119,12 @@ export class FBXModel extends GameObject {
                 this.onLoadCallback(this);
             }
         });
+    }
+
+    onLoad(callback) {
+        this.onLoadCallback = callback;
+        if (this.isLoaded && callback) {
+            callback(this);
+        }
     }
 }

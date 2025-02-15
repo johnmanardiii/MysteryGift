@@ -24,17 +24,40 @@ export class Bob extends FBXModel {
 
     load(scene, loadingManager)
     {
-        super.load(scene, loadingManager);
         // load additional bob textures
+        const base = window.location.hostname === 'localhost'
+        ? '/models/fbx/'             // Local development
+        : '/MysteryGift/models/fbx/';
+        const texture_loader = new THREE.TextureLoader();
+        this.sad_eye = texture_loader.load(base + "e.4.png");
+        this.happy_eye = texture_loader.load(base + "e.5.png");
+        this.regular_eye = texture_loader.load(base + "e.0.png");
+        this.squint_eye = texture_loader.load(base + "e.1.png");
+        this.closed_eye = texture_loader.load(base + "e.2.png");
+        this.frustrated_eye = texture_loader.load(base + "e.7.png");
+
+        this.onLoad((model) => {
+            this.mesh.traverse((child) => {
+                if(child.isMesh) {
+                    if(child.name === "_001_cat00_mdl") {
+                        this.eyes = child;
+                        this.eyes.material.map = this.happy_eye;
+                        this.eyes.material.needsUpdate = true;
+                    }
+                    if(child.name === "_002_cat00_mdl") {
+                        this.mouth = child;
+                    }
+                }
+            });
+        });
+        super.load(scene, loadingManager);
     }
 
-    onLoad(callback)
-    {
-        super.onLoad((model) => {
+    // texture swapping methods (head)
 
-        })
-    }
+    // texture swapping methods (mouth)
 
+    // anim methods
     idle()
     {
         super.playAnimation(0);
