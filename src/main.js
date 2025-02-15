@@ -27,6 +27,32 @@ class Game {
         document.addEventListener('touchend', () => {
             this.isTapped = false;
         });
+
+        // Apply multiple event preventions to the renderer's DOM element
+        const canvas = this.renderer.domElement;
+        canvas.style.touchAction = 'none';  // Prevents default touch actions
+        
+        // Prevent all default events that might trigger save/print dialogs
+        const preventDefaults = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        };
+
+        canvas.addEventListener('contextmenu', preventDefaults);
+        canvas.addEventListener('touchstart', preventDefaults, { passive: false });
+        canvas.addEventListener('touchmove', preventDefaults, { passive: false });
+        canvas.addEventListener('touchend', preventDefaults);
+        canvas.addEventListener('click', preventDefaults);
+        canvas.addEventListener('pointerdown', preventDefaults);
+        canvas.addEventListener('pointermove', preventDefaults);
+        canvas.addEventListener('pointerup', preventDefaults);
+        canvas.addEventListener('dragstart', preventDefaults);
+
+        // Disable user selection and highlighting
+        canvas.style.userSelect = 'none';
+        canvas.style.webkitUserSelect = 'none';
+        canvas.style.webkitTapHighlightColor = 'rgba(0,0,0,0)';
+        canvas.setAttribute('unselectable', 'on');
     }
 
     setupLoadingManager() {
