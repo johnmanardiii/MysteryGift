@@ -1,94 +1,6 @@
 import * as THREE from 'three';
-import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
-
-// Base class for game objects
-class GameObject {
-    constructor() {
-        this.mesh = null;
-        this.mixer = null; // For FBX animations
-    }
-
-    update(deltaTime) {
-        // Update animations if they exist
-        if (this.mixer) {
-            this.mixer.update(deltaTime);
-        }
-    }
-}
-
-// FBX Model game object
-class FBXModel extends GameObject {
-    constructor(path, options = {}) {
-        super();
-        this.path = path;
-        this.options = {
-            scale: 1,
-            position: new THREE.Vector3(0, 0, 0),
-            rotation: new THREE.Euler(0, 0, 0),
-            ...options
-        };
-        this.isLoaded = false;
-        this.onLoadCallback = null;
-    }
-
-    load(scene, loadingManager) {
-        const loader = new FBXLoader(loadingManager);
-        
-        loader.load(this.path, (fbx) => {
-            this.mesh = fbx;
-            
-            // Apply transforms~
-            this.mesh.scale.multiplyScalar(this.options.scale);
-            this.mesh.position.copy(this.options.position);
-            this.mesh.rotation.copy(this.options.rotation);
-
-            // Setup animations if they exist
-            if (fbx.animations && fbx.animations.length) {
-                this.mixer = new THREE.AnimationMixer(fbx);
-                const action = this.mixer.clipAction(fbx.animations[0]);
-                action.play();
-            }
-
-            // Setup shadows
-            fbx.traverse((child) => {
-                if (child.isMesh) {
-                    child.castShadow = true;
-                    child.receiveShadow = true;
-                }
-            });
-
-            scene.add(this.mesh);
-            this.isLoaded = true;
-            
-            if (this.onLoadCallback) {
-                this.onLoadCallback(this);
-            }
-        });
-    }
-
-    onLoad(callback) {
-        this.onLoadCallback = callback;
-        if (this.isLoaded && callback) {
-            callback(this);
-        }
-    }
-}
-
-// Your existing RotatingCube class remains the same
-class RotatingCube extends GameObject {
-    constructor() {
-        super();
-        const geometry = new THREE.BoxGeometry();
-        const material = new THREE.MeshPhongMaterial({ color: 0xffff00 });
-        this.mesh = new THREE.Mesh(geometry, material);
-        this.rotationSpeed = 1.0;
-    }
-
-    update(deltaTime) {
-        this.mesh.rotation.x += this.rotationSpeed * deltaTime;
-        this.mesh.rotation.y += this.rotationSpeed * deltaTime;
-    }
-}
+import { FBXModel } from './objects/FBXModel';
+import { GameObject } from './objects/GameObject';
 
 // Enhanced Game class
 class Game {
@@ -154,7 +66,7 @@ class Game {
     createInitialObjects() {
         // Example of loading an FBX model
         const modelPath = window.location.hostname === 'localhost'
-        ? 'public/models/fbx/bobdance.fbx'             // Local development
+        ? '/models/fbx/bobdance.fbx'             // Local development
         : '/MysteryGift/models/fbx/bobdance.fbx'; // Production/GitHub Pages
         const characterModel = new FBXModel(modelPath, {
             scale: .15,
