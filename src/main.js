@@ -37,7 +37,7 @@ class FBXModel extends GameObject {
         loader.load(this.path, (fbx) => {
             this.mesh = fbx;
             
-            // Apply transforms
+            // Apply transforms~
             this.mesh.scale.multiplyScalar(this.options.scale);
             this.mesh.position.copy(this.options.position);
             this.mesh.rotation.copy(this.options.rotation);
