@@ -17,31 +17,31 @@ export class FBXModel extends GameObject {
         this.onLoadCallback = null;
     }
 
-    playOneShot(animIndex, nextAnimIndex, fadeInDuration = 0.3, fadeOutDuration = 0.3) {
+    playOneShot(animIndex, nextAnimIndex, fadeInDuration = 0.3, fadeOutDuration = 0.3, onComplete = null) {
         if (!this.animations || this.animations.length <= animIndex) return false;
-
+    
         // Stop current animation if it exists
         if (this.currentAction) {
             this.currentAction.fadeOut(fadeInDuration);
+            this.mixer.removeEventListener('finished');
         }
-
+    
         // Start new animation
         const newAction = this.mixer.clipAction(this.animations[animIndex]);
         newAction.reset();
         newAction.fadeIn(fadeInDuration);
         newAction.setLoop(THREE.LoopOnce);
         newAction.clampWhenFinished = true;
-
-        // Clear any existing finished listeners
-        this.mixer.removeEventListener('finished');
-
-        // Add new finished listener
-        this.mixer.addEventListener('finished', () => {
+    
+        // Add new finished listener with state update
+        const onFinished = () => {
             this.crossFadeToAnimation(nextAnimIndex, fadeOutDuration);
-            // Remove the listener to prevent memory leaks
-            this.mixer.removeEventListener('finished');
-        });
-
+            if (onComplete) onComplete(); // Call the completion callback
+            this.mixer.removeEventListener('finished', onFinished);
+        };
+        
+        this.mixer.addEventListener('finished', onFinished);
+    
         newAction.play();
         this.currentAction = newAction;
         return true;

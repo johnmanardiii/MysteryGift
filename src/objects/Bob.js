@@ -102,14 +102,17 @@ export class Bob extends FBXModel {
         }
     }
 
-    waveOnce(transitionSpeed = this.animConfig.transitionSpeed)
-    {
-        if (this.currentState !== this.AnimationStates.WAVE) {
+    waveOnce(transitionSpeed = this.animConfig.transitionSpeed) {
+        if(this.currentState !== this.AnimationStates.WAVE)
+        {
             super.playOneShot(
                 this.AnimationStates.WAVE,      // Wave animation
                 this.AnimationStates.IDLE,      // Return to idle
                 transitionSpeed,                // Transition in
-                this.animConfig.waveToIdleDelay // Transition out
+                this.animConfig.waveToIdleDelay, // Transition out
+                () => {
+                    this.currentState = this.AnimationStates.IDLE; // Update state when animation completes
+                }
             );
             this.currentState = this.AnimationStates.WAVE;
         }
