@@ -17,65 +17,54 @@ export class FBXModel extends GameObject {
         this.onLoadCallback = null;
     }
 
-    playAnimation(index = 0, loop = true) {
-        if (this.animations && this.animations.length > index) {
-            if (this.currentAction) {
-                this.currentAction.stop();
-            }
-            this.currentAction = this.mixer.clipAction(this.animations[index]);
-            
-            // Set loop mode
-            if (loop) {
-                this.currentAction.setLoop(THREE.LoopRepeat);
-            } else {
-                this.currentAction.setLoop(THREE.LoopOnce);
-                this.currentAction.clampWhenFinished = true; // Freezes on last frame
-            }
+    playOneShot(animIndex, nextAnimIndex, fadeInDuration = 0.3, fadeOutDuration = 0.3) {
+        if (!this.animations || this.animations.length <= animIndex) return false;
 
-            this.currentAction.play();
-            return true;
+        // Stop current animation if it exists
+        if (this.currentAction) {
+            this.currentAction.fadeOut(fadeInDuration);
         }
-        return false;
+
+        // Start new animation
+        const newAction = this.mixer.clipAction(this.animations[animIndex]);
+        newAction.reset();
+        newAction.fadeIn(fadeInDuration);
+        newAction.setLoop(THREE.LoopOnce);
+        newAction.clampWhenFinished = true;
+
+        // Clear any existing finished listeners
+        this.mixer.removeEventListener('finished');
+
+        // Add new finished listener
+        this.mixer.addEventListener('finished', () => {
+            this.crossFadeToAnimation(nextAnimIndex, fadeOutDuration);
+            // Remove the listener to prevent memory leaks
+            this.mixer.removeEventListener('finished');
+        });
+
+        newAction.play();
+        this.currentAction = newAction;
+        return true;
     }
 
-    playAnimationSequence(index = 0, nextIndex = 1) {
-        if (this.animations && this.animations.length > index) {
-            if (this.currentAction) {
-                print(this.currentAction);
-                this.currentAction.stop();
-            }
-            this.currentAction = this.mixer.clipAction(this.animations[index]);
-            this.currentAction.setLoop(THREE.LoopOnce);
-            this.currentAction.clampWhenFinished = true;
+    crossFadeToAnimation(newIndex, duration = 0.3) {
+        if (!this.animations || this.animations.length <= newIndex) return false;
 
-            // Add a finished callback, this could be bugged if cancelled too early...
-                // might require extra logic to handle animation transitions smoothly
-            this.mixer.addEventListener('finished', () => {
-                this.crossFadeToAnimation(nextIndex, .2);
-            });
-
-            this.currentAction.play();
-            return true;
+        const newAction = this.mixer.clipAction(this.animations[newIndex]);
+        
+        if (this.currentAction) {
+            // Fade out current animation
+            this.currentAction.fadeOut(duration);
         }
-        return false;
-    }
-
-    crossFadeToAnimation(newIndex, duration = 0.5) {
-        if (this.animations && this.animations.length > newIndex) {
-            const newAction = this.mixer.clipAction(this.animations[newIndex]);
-            
-            if (this.currentAction) {
-                // Fade out current animation
-                this.currentAction.fadeOut(duration);
-            }
-            
-            // Fade in new animation
-            newAction.reset().fadeIn(duration).play();
-            newAction.loop = THREE.LoopRepeat;
-            this.currentAction = newAction;
-            return true;
-        }
-        return false;
+        
+        // Reset and fade in new animation
+        newAction.reset();
+        newAction.fadeIn(duration);
+        newAction.setLoop(THREE.LoopRepeat);
+        newAction.play();
+        
+        this.currentAction = newAction;
+        return true;
     }
 
     load(scene, loadingManager) {

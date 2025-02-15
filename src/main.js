@@ -12,47 +12,19 @@ class Game {
         this.setupLoadingManager();
         this.setupScene();
 
-        this.tapPosition = { x: 0, y: 0 };
-        this.isTapped = false;
-        this.tappedLastFrame = false;
+        this.bob.setTransitionSpeed(0.5); // Half-second transitions
+        this.bob.idle();
         
-        document.addEventListener('touchstart', (event) => {
-            this.isTapped = true;
-            // Get the first touch position
-            const touch = event.touches[0];
-            this.tapPosition.x = (touch.clientX / window.innerWidth) * 2 - 1;
-            this.tapPosition.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+        window.addEventListener('pointerdown', (event) => {
+            this.bob.waveOnce(0.2);
         });
         
-        document.addEventListener('touchend', () => {
-            this.isTapped = false;
+        window.addEventListener('keypress', (event) => {
+            if (event.key === 'd') {
+                // Dance with slow transition
+                this.bob.dance(1.0);
+            }
         });
-
-        // Apply multiple event preventions to the renderer's DOM element
-        const canvas = this.renderer.domElement;
-        canvas.style.touchAction = 'none';  // Prevents default touch actions
-        
-        // Prevent all default events that might trigger save/print dialogs
-        const preventDefaults = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-        };
-
-        canvas.addEventListener('contextmenu', preventDefaults);
-        canvas.addEventListener('touchstart', preventDefaults, { passive: false });
-        canvas.addEventListener('touchmove', preventDefaults, { passive: false });
-        canvas.addEventListener('touchend', preventDefaults);
-        canvas.addEventListener('click', preventDefaults);
-        canvas.addEventListener('pointerdown', preventDefaults);
-        canvas.addEventListener('pointermove', preventDefaults);
-        canvas.addEventListener('pointerup', preventDefaults);
-        canvas.addEventListener('dragstart', preventDefaults);
-
-        // Disable user selection and highlighting
-        canvas.style.userSelect = 'none';
-        canvas.style.webkitUserSelect = 'none';
-        canvas.style.webkitTapHighlightColor = 'rgba(0,0,0,0)';
-        canvas.setAttribute('unselectable', 'on');
     }
 
     setupLoadingManager() {
@@ -132,17 +104,6 @@ class Game {
         const deltaTime = (currentTime - this.lastTime) / 1000;
         this.lastTime = currentTime;
 
-        if (this.isTapped) {
-            console.log('Tapped at:', this.tapPosition);
-        }
-
-        // todo: do if tapped -> show bob face and spawn a bob for this.bob
-        //      if untapped -> show other bob face to test tapping / facial swap.
-        if(this.isTapped && !this.tappedLastFrame)
-        {
-            this.bob.waveOnce();
-        }
-
         // Update all game objects
         for (const obj of this.gameObjects) {
             obj.update(deltaTime);
@@ -150,8 +111,6 @@ class Game {
 
         // Render the scene
         this.renderer.render(this.scene, this.camera);
-
-        this.tappedLastFrame = this.isTapped;
 
         // Queue next frame
         requestAnimationFrame((time) => this.update(time));

@@ -11,15 +11,32 @@ export class Bob extends FBXModel {
     constructor(path)
     {
         super(path, {
-                    scale: .15,
-                    position: new THREE.Vector3(0, -1, 0),
-                    usesBasicMaterial: true
-                })
-        // on load, grab references to things that need to change like animations
-        // and face stuff
+            scale: .15,
+            position: new THREE.Vector3(0, -1, 0),
+            usesBasicMaterial: true
+        });
+        
+        // Animation states
+        this.AnimationStates = {
+            IDLE: 0,
+            WAVE: 1,
+            DANCE: 2
+        };
+        
+        // Animation configuration
+        this.animConfig = {
+            transitionSpeed: 0.3,  // Default transition time in seconds
+            waveToIdleDelay: 0.2   // Delay before transitioning back to idle
+        };
+        
+        this.currentState = this.AnimationStates.IDLE;
         this.eyes = null
         this.mouth = null
         // start default idle animation
+    }
+
+    setTransitionSpeed(speed) {
+        this.animConfig.transitionSpeed = speed;
     }
 
     load(scene, loadingManager)
@@ -77,20 +94,32 @@ export class Bob extends FBXModel {
     // texture swapping methods (mouth)
 
     // anim methods
-    idle()
+    idle(transitionSpeed = this.animConfig.transitionSpeed)
     {
-        super.playAnimation(0);
+        if (this.currentState !== this.AnimationStates.IDLE) {
+            super.crossFadeToAnimation(this.AnimationStates.IDLE, transitionSpeed);
+            this.currentState = this.AnimationStates.IDLE;
+        }
     }
 
-    waveOnce()
+    waveOnce(transitionSpeed = this.animConfig.transitionSpeed)
     {
-        // set to wave, then when over, go back to idle
-        super.playAnimationSequence(1, 0);
+        if (this.currentState !== this.AnimationStates.WAVE) {
+            super.playOneShot(
+                this.AnimationStates.WAVE,      // Wave animation
+                this.AnimationStates.IDLE,      // Return to idle
+                transitionSpeed,                // Transition in
+                this.animConfig.waveToIdleDelay // Transition out
+            );
+            this.currentState = this.AnimationStates.WAVE;
+        }
     }
 
-    dance()
+    dance(transitionSpeed = this.animConfig.transitionSpeed)
     {
-        // start looping dance
-        super.playAnimation(2);
+        if (this.currentState !== this.AnimationStates.DANCE) {
+            super.crossFadeToAnimation(this.AnimationStates.DANCE, transitionSpeed);
+            this.currentState = this.AnimationStates.DANCE;
+        }
     }
 }
