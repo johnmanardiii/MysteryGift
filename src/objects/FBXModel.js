@@ -82,7 +82,7 @@ export class FBXModel extends GameObject {
             if (fbx.animations && fbx.animations.length) {
                 this.animations = fbx.animations;  // Store the animations
                 this.mixer = new THREE.AnimationMixer(fbx);
-                this.currentAction = this.mixer.clipAction(this.animations[2]);
+                this.currentAction = this.mixer.clipAction(this.animations[0]);
                 this.currentAction.play();
             }
     

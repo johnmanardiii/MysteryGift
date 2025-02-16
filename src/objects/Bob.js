@@ -102,8 +102,6 @@ export class Bob extends FBXModel {
                 if(child.isMesh) {
                     if(child.name === "_001_cat00_mdl") {
                         this.eyes = child;
-                        this.eyes.material.map = this.closed_eye;
-                        this.eyes.material.needsUpdate = true;
                     }
                     if(child.name === "_002_cat00_mdl") {
                         this.mouth = child;
@@ -111,7 +109,7 @@ export class Bob extends FBXModel {
                 }
             });
 
-            idle();
+            this.idle();
         });
         super.load(scene, loadingManager);
     }

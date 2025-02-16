@@ -15,7 +15,10 @@ class Game {
         this.bob.setTransitionSpeed(0.5); // Half-second transitions
         
         window.addEventListener('pointerdown', (event) => {
+            // todo: move this to a function so i can handle pointer more directly
             this.bob.waveOnce(0.2);
+            this.bob.setEyes("regular");
+            this.bob.setMouth("smile3");
         });
         
         window.addEventListener('keypress', (event) => {
