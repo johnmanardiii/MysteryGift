@@ -17,6 +17,8 @@ export class DialogManager extends GameObject {
         // Set up the dialog sprite
         const spritePath = game.basePath + '/images/mobile_box.png';
         this.textureLoader.load(spritePath, (texture) => {
+            texture.encoding = THREE.sRGBEncoding;
+            texture.colorSpace = THREE.SRGBColorSpace;
             const material = new THREE.SpriteMaterial({ 
                 map: texture,
                 transparent: true,
