@@ -6,41 +6,32 @@ export class DialogManager extends GameObject {
         super();
         this.game = game;
         this.visible = true;
-        this.currentText = '';
+        this.currentText = 'Hello! This is a test message...';
+        this.displayedText = '';
         this.textureLoader = new THREE.TextureLoader(game.loadingManager);
         
-        // Configure dialog dimensions - adjusted for new image ratio (2184:1500)
-        this.dialogWidth = 2.8;  // Adjusted width for new proportions
-        this.dialogHeight = 1.9;  // Height scaled based on new aspect ratio
-        this.textPadding = 0.2;  // Adjusted padding for new dimensions
+        // Configure dialog dimensions
+        this.dialogWidth = 2.8;
+        this.dialogHeight = 1.9;
+        this.textPadding = 0.2;
         
-        // Set up the dialog sprite
-        const spritePath = game.basePath + '/images/mobile_box.png';
-        this.textureLoader.load(spritePath, (texture) => {
-            texture.encoding = THREE.sRGBEncoding;
-            texture.colorSpace = THREE.SRGBColorSpace;
-            const material = new THREE.SpriteMaterial({ 
-                map: texture,
-                transparent: true,
-                depthTest: false,
-                depthWrite: false
-            });
-            
-            this.sprite = new THREE.Sprite(material);
-            this.sprite.scale.set(this.dialogWidth, this.dialogHeight, 1);
-            this.updatePosition();
-            game.scene.add(this.sprite);
-            
-            // Set up text canvas and sprite after dialog sprite is loaded
-            this.setupTextSystem();
-        });
+        // Animation properties
+        this.isAnimating = false;
+        this.charIndex = 0;
+        this.charDelay = 0.05; // Seconds per character
+        this.timeAccumulator = 0;
+        
+        // Create canvas for text
+        this.setupTextSystem();
+        this.loadDialogBackground();
     }
     
     setupTextSystem() {
         // Create canvas for text rendering
         this.textCanvas = document.createElement('canvas');
+        // Adjusted canvas dimensions to match dialog box ratio better
         this.textCanvas.width = 1024;
-        this.textCanvas.height = 256;
+        this.textCanvas.height = 512;
         this.textContext = this.textCanvas.getContext('2d');
         
         // Create texture from canvas
@@ -56,75 +47,125 @@ export class DialogManager extends GameObject {
         });
         
         this.textSprite = new THREE.Sprite(textMaterial);
+        // Adjust text sprite scale to match dialog box better
+        const aspectRatio = this.textCanvas.width / this.textCanvas.height;
         this.textSprite.scale.set(
-            this.dialogWidth - this.textPadding * 2,
-            this.dialogHeight - this.textPadding * 2,
+            (this.dialogWidth - this.textPadding * 2),
+            (this.dialogWidth - this.textPadding * 2) / aspectRatio,
             1
         );
         
-        // Position text slightly in front of dialog box
-        this.updatePosition();
         this.game.scene.add(this.textSprite);
     }
     
-    updatePosition() {
-        if (!this.sprite) return;
-        
-        // Get camera aspect and position
-        const camera = this.game.camera;
-        const distance = Math.abs(camera.position.z) * 0.9; // Position at 80% of camera distance
-        
-        // Calculate top center position
-        const vFov = camera.fov * Math.PI / 180;
-        const height = 2.7 * Math.tan(vFov / 2) * distance;
-        const width = height * camera.aspect;
-        
-        // Position dialog at top center with adjusted spacing for new dimensions
-        const yOffset = height / 2 - this.dialogHeight * 1.2; // Adjusted for new height
-        this.sprite.position.set(0, yOffset, camera.position.z - distance);
-        
-        // Update text position if it exists
-        if (this.textSprite) {
-            this.textSprite.position.copy(this.sprite.position);
-            this.textSprite.position.z += 0.01; // Slightly in front
-        }
+    loadDialogBackground() {
+        const spritePath = this.game.basePath + '/images/mobile_box.png';
+        this.textureLoader.load(spritePath, (texture) => {
+            texture.encoding = THREE.sRGBEncoding;
+            texture.colorSpace = THREE.SRGBColorSpace;
+            const material = new THREE.SpriteMaterial({ 
+                map: texture,
+                transparent: true,
+                depthTest: false,
+                depthWrite: false
+            });
+            
+            this.sprite = new THREE.Sprite(material);
+            this.sprite.scale.set(this.dialogWidth, this.dialogHeight, 1);
+            this.updatePosition();
+            this.game.scene.add(this.sprite);
+        });
     }
     
-    setText(text) {
-        this.currentText = text;
+    updateText() {
         if (!this.textContext) return;
         
         // Clear canvas
         this.textContext.clearRect(0, 0, this.textCanvas.width, this.textCanvas.height);
         
         // Configure text style
-        this.textContext.font = '28px "Arial Rounded MT"';
-        this.textContext.fillStyle = 'black';
-        this.textContext.textAlign = 'center';
+        this.textContext.font = 'bold 80px Arial';
+        this.textContext.textAlign = 'left';
         this.textContext.textBaseline = 'middle';
         
-        // Word wrap text
-        const maxWidth = this.textCanvas.width - 40;
-        const words = text.split(' ');
-        let line = '';
-        let y = this.textCanvas.height / 2;
+        // Calculate starting position
+        const startX = 40;
+        const startY = this.textCanvas.height / 2;
         
-        for (const word of words) {
-            const testLine = line + word + ' ';
-            const metrics = this.textContext.measureText(testLine);
+        // Draw each character (allows for individual character coloring)
+        let currentX = startX;
+        for (let i = 0; i < this.displayedText.length; i++) {
+            const char = this.displayedText[i];
             
-            if (metrics.width > maxWidth && line !== '') {
-                this.textContext.fillText(line, this.textCanvas.width / 2, y);
-                line = word + ' ';
-                y += 40;
+            // Example of coloring specific characters
+            // You can modify this logic to color characters however you want
+            if (char === '!') {
+                this.textContext.fillStyle = '#FF0000'; // Red exclamation marks
             } else {
-                line = testLine;
+                this.textContext.fillStyle = '#000000'; // Default black text
             }
+            
+            this.textContext.fillText(char, currentX, startY);
+            currentX += this.textContext.measureText(char).width;
         }
-        this.textContext.fillText(line, this.textCanvas.width / 2, y);
         
         // Update texture
         this.textTexture.needsUpdate = true;
+    }
+    
+    updateTextAnimation(deltaTime) {
+        if (!this.isAnimating) return;
+        
+        this.timeAccumulator += deltaTime;
+        
+        while (this.timeAccumulator >= this.charDelay && this.charIndex < this.currentText.length) {
+            this.timeAccumulator -= this.charDelay;
+            this.displayedText += this.currentText[this.charIndex];
+            this.charIndex++;
+            this.updateText();
+            
+            // Play sound effect (if available)
+            if (this.game.audio && this.game.audio.playTextSound) {
+                this.game.audio.playTextSound();
+            }
+        }
+        
+        this.isAnimating = this.charIndex < this.currentText.length;
+    }
+    
+    setText(text) {
+        this.currentText = text;
+        this.displayedText = '';
+        this.charIndex = 0;
+        this.isAnimating = true;
+        this.timeAccumulator = 0;
+        this.updateText();
+    }
+    
+    updatePosition() {
+        if (!this.sprite) return;
+        
+        const camera = this.game.camera;
+        const distance = Math.abs(camera.position.z) * 0.9;
+        
+        const vFov = camera.fov * Math.PI / 180;
+        const height = 2.7 * Math.tan(vFov / 2) * distance;
+        const width = height * camera.aspect;
+        
+        const yOffset = height / 2 - this.dialogHeight * 1.2;
+        const zPos = camera.position.z - distance;
+        
+        this.sprite.position.set(0, yOffset, zPos);
+        
+        if (this.textSprite) {
+            this.textSprite.position.copy(this.sprite.position);
+            this.textSprite.position.z += 0.01; // Slightly in front
+        }
+    }
+    
+    update(deltaTime) {
+        this.updatePosition();
+        this.updateTextAnimation(deltaTime);
     }
     
     toggle() {
@@ -145,30 +186,31 @@ export class DialogManager extends GameObject {
         if (this.textSprite) this.textSprite.visible = false;
     }
     
-    update(deltaTime) {
-        // Handle any animations or updates here
-        this.updatePosition(); // Keep dialog positioned correctly
-    }
-    
     handleClick(event) {
-        // Convert mouse position to normalized device coordinates
         const mouse = new THREE.Vector2(
             (event.clientX / window.innerWidth) * 2 - 1,
             -(event.clientY / window.innerHeight) * 2 + 1
         );
         
-        // Raycasting for sprite intersection
         const raycaster = new THREE.Raycaster();
         raycaster.setFromCamera(mouse, this.game.camera);
         
         if (this.sprite) {
             const intersects = raycaster.intersectObject(this.sprite);
             if (intersects.length > 0) {
-                this.toggle();
-                return true; // Click was handled
+                if (this.isAnimating) {
+                    // Skip animation and show full text
+                    this.displayedText = this.currentText;
+                    this.charIndex = this.currentText.length;
+                    this.isAnimating = false;
+                    this.updateText();
+                } else {
+                    this.toggle();
+                }
+                return true;
             }
         }
         
-        return false; // Click was not handled
+        return false;
     }
 }

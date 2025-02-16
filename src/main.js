@@ -19,6 +19,7 @@ class Game {
             this.bob.waveOnce(0.2);
             this.bob.setEyes("regular");
             this.bob.setMouth("smile3");
+            this.dialogManager.setText("testingggsgasdfasdf")
         });
         
         window.addEventListener('keypress', (event) => {
