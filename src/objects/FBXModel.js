@@ -33,10 +33,16 @@ export class FBXModel extends GameObject {
         newAction.setLoop(THREE.LoopOnce);
         newAction.clampWhenFinished = true;
     
+        // Store the original action for cancellation check
+        const originalAction = newAction;
+    
         // Add new finished listener with state update
         const onFinished = () => {
-            this.crossFadeToAnimation(nextAnimIndex, fadeOutDuration);
-            if (onComplete) onComplete(); // Call the completion callback
+            // Only proceed with next animation if this action hasn't been superseded
+            if (this.currentAction === originalAction) {
+                this.crossFadeToAnimation(nextAnimIndex, fadeOutDuration);
+                if (onComplete) onComplete(); // Call the completion callback
+            }
             this.mixer.removeEventListener('finished', onFinished);
         };
         
@@ -45,7 +51,7 @@ export class FBXModel extends GameObject {
         newAction.play();
         this.currentAction = newAction;
         return true;
-    }
+    } 
 
     crossFadeToAnimation(newIndex, duration = 0.3) {
         if (!this.animations || this.animations.length <= newIndex) return false;

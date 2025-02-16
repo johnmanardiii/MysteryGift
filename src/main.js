@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Bob } from './objects/Bob';
 import { DialogManager } from './objects/DialogManager';
+import { SequenceManager } from './objects/SequenceManager';
 
 // Enhanced Game class
 class Game {
@@ -16,10 +17,11 @@ class Game {
         
         window.addEventListener('pointerdown', (event) => {
             // todo: move this to a function so i can handle pointer more directly
-            this.bob.waveOnce(0.2);
-            this.bob.setEyes("regular");
-            this.bob.setMouth("smile3");
-            this.dialogManager.setText("testingggsgasdfasdf")
+            // also make this not so direclty tied to clicking!
+            if(!this.dialogManager.isAnimating)
+            {
+                this.sequenceManager.playNextStep();
+            }
         });
         
         window.addEventListener('keypress', (event) => {
@@ -80,6 +82,30 @@ class Game {
         this.createInitialObjects();
     }
 
+    setupSequenceManager()
+    {
+        this.sequenceManager = new SequenceManager(this);
+
+        // Register a sequence:
+        this.sequenceManager.registerSequence('intro', [
+            {
+                text: "Hello! very very long sentence to test out interrupting during talking",
+                expression: { eyes: "happy", mouth: "smile1" },
+                animation: { type: "wave" },
+                sound: "greeting"
+            },
+            {
+                text: "Let's dance!",
+                expression: { eyes: "very_happy", mouth: "smile3" },
+                animation: { type: "dance" },
+                sound: "music"
+            }
+        ]);
+
+        // Play the sequence:
+        this.sequenceManager.playSequence('intro');
+    }
+
     createInitialObjects() {
         // Example of loading an FBX model
         const modelPath = window.location.hostname === 'localhost'
@@ -94,6 +120,11 @@ class Game {
         
         // Set initial text
         this.dialogManager.setText("Hello! Click me to toggle the [#0066CC]happy birthday[/] box!");
+        
+        // sequence manager depends on a lot of stuff, so wait for everything to load:
+        this.loadingManager.onLoad = () => {
+            this.setupSequenceManager();
+        }
     }
 
     addGameObject(gameObject) {

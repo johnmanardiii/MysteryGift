@@ -228,6 +228,7 @@ export class DialogManager extends GameObject {
     }
     
     updateTextAnimation(deltaTime) {
+
         if (!this.isAnimating) return;
         
         this.timeAccumulator += deltaTime;

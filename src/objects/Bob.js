@@ -130,6 +130,7 @@ export class Bob extends FBXModel {
     // anim methods
     idle(transitionSpeed = this.animConfig.transitionSpeed)
     {
+        console.log("idling");
         if (this.currentState !== this.AnimationStates.IDLE) {
             super.crossFadeToAnimation(this.AnimationStates.IDLE, transitionSpeed);
             this.currentState = this.AnimationStates.IDLE;
@@ -137,8 +138,13 @@ export class Bob extends FBXModel {
     }
 
     waveOnce(transitionSpeed = this.animConfig.transitionSpeed) {
-        if(this.currentState !== this.AnimationStates.WAVE)
-        {
+        console.log("waving");
+        if(this.currentState !== this.AnimationStates.WAVE) {
+            // Clear any pending animation callbacks
+            if (this.currentAction) {
+                this.mixer.removeEventListener('finished');
+            }
+    
             // set mouth to happy for now:
             this.setMouth("smile3");
             super.playOneShot(
@@ -147,8 +153,12 @@ export class Bob extends FBXModel {
                 transitionSpeed,                // Transition in
                 this.animConfig.waveToIdleDelay, // Transition out
                 () => {
-                    this.currentState = this.AnimationStates.IDLE; // Update state when animation completes
-                    this.setMouth("smile1");
+                    // Only transition to idle if we haven't already switched to another animation
+                    // AND if this action is still the current action
+                    if (this.currentState === this.AnimationStates.WAVE) {
+                        this.currentState = this.AnimationStates.IDLE;
+                        this.idle();
+                    }
                 }
             );
             this.currentState = this.AnimationStates.WAVE;
@@ -157,6 +167,7 @@ export class Bob extends FBXModel {
 
     dance(transitionSpeed = this.animConfig.transitionSpeed)
     {
+        console.log("dancing");
         if (this.currentState !== this.AnimationStates.DANCE) {
             super.crossFadeToAnimation(this.AnimationStates.DANCE, transitionSpeed);
             this.currentState = this.AnimationStates.DANCE;
