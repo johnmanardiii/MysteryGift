@@ -124,12 +124,6 @@ class Game {
         document.documentElement.style.position = 'fixed';
         document.documentElement.style.overflow = 'hidden';
 
-        if (window.DeviceOrientationEvent) {
-            window.addEventListener('deviceorientation', (e) => {
-                e.preventDefault();
-            }, { passive: false });
-        }
-
         // Start the game loop
         requestAnimationFrame((time) => this.update(time));
     }
