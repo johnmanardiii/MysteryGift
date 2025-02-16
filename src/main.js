@@ -93,7 +93,7 @@ class Game {
         this.addGameObject(this.dialogManager);
         
         // Set initial text
-        this.dialogManager.setText("Hello! Click me to toggle the dialog box!");
+        this.dialogManager.setText("Hello! Click me to toggle the [#0066CC]happy birthday[/] box!");
     }
 
     addGameObject(gameObject) {

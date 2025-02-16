@@ -21,6 +21,9 @@ export class DialogManager extends GameObject {
         this.charDelay = 0.05; // Seconds per character
         this.timeAccumulator = 0;
         
+        // Text layout properties
+        this.textLayout = [];
+        
         // Create canvas for text
         this.setupTextSystem();
         this.loadDialogBackground();
@@ -30,7 +33,7 @@ export class DialogManager extends GameObject {
         // Create canvas for text rendering
         this.textCanvas = document.createElement('canvas');
         // Adjusted canvas dimensions to match dialog box ratio better
-        this.textCanvas.width = 1024;
+        this.textCanvas.width = 900;
         this.textCanvas.height = 512;
         this.textContext = this.textCanvas.getContext('2d');
         
@@ -76,6 +79,109 @@ export class DialogManager extends GameObject {
             this.game.scene.add(this.sprite);
         });
     }
+
+    calculateTextLayout(text) {
+        const padding = 50;
+        const lineHeight = 100;
+        const maxWidth = this.textCanvas.width - (padding);
+        
+        this.textContext.font = 'bold 80px Arial';
+        
+        let layout = [];
+        let currentLine = [];
+        let currentLineWidth = 0;
+        let x = padding;
+        let y = padding;
+        
+        // Pre-calculate positions for each character
+        let inColorTag = false;
+        let colorBuffer = '';
+        let currentColor = '#000000';
+        
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+            
+            // Handle color tags
+            if (char === '[') {
+                inColorTag = true;
+                colorBuffer = '';
+                continue;
+            }
+            
+            if (inColorTag) {
+                if (char === ']') {
+                    inColorTag = false;
+                    if (colorBuffer.startsWith('/')) {
+                        currentColor = '#000000';
+                    } else {
+                        currentColor = colorBuffer;
+                    }
+                } else {
+                    colorBuffer += char;
+                }
+                continue;
+            }
+            
+            // Handle actual text characters
+            const metrics = this.textContext.measureText(char);
+            const charWidth = metrics.width;
+            
+            // Check if we need to wrap to next line
+            if (char === ' ' || currentLineWidth + charWidth > maxWidth) {
+                if (char !== ' ') {
+                    // Look back to find last space for word wrapping
+                    let lastSpaceIndex = currentLine.length - 1;
+                    while (lastSpaceIndex >= 0 && currentLine[lastSpaceIndex].char !== ' ') {
+                        lastSpaceIndex--;
+                    }
+                    
+                    if (lastSpaceIndex >= 0) {
+                        // Move word to next line
+                        const wordChars = currentLine.splice(lastSpaceIndex + 1);
+                        layout.push({
+                            chars: currentLine,
+                            y: y
+                        });
+                        
+                        // Reset for next line
+                        y += lineHeight;
+                        currentLine = wordChars;
+                        
+                        // Recalculate x positions for wrapped word
+                        let newX = padding;
+                        for (let charInfo of currentLine) {
+                            charInfo.x = newX;
+                            newX += this.textContext.measureText(charInfo.char).width;
+                        }
+                        currentLineWidth = newX - padding;
+                    }
+                }
+            }
+            
+            if (char !== ' ' || currentLine.length > 0) {
+                currentLine.push({
+                    char,
+                    x: x + currentLineWidth,
+                    color: currentColor
+                });
+                currentLineWidth += charWidth;
+            }
+            
+            if (char === ' ') {
+                currentLineWidth += this.textContext.measureText(' ').width;
+            }
+        }
+        
+        // Add the last line
+        if (currentLine.length > 0) {
+            layout.push({
+                chars: currentLine,
+                y: y
+            });
+        }
+        
+        return layout;
+    }
     
     updateText() {
         if (!this.textContext) return;
@@ -86,31 +192,39 @@ export class DialogManager extends GameObject {
         // Configure text style
         this.textContext.font = 'bold 80px Arial';
         this.textContext.textAlign = 'left';
-        this.textContext.textBaseline = 'middle';
+        this.textContext.textBaseline = 'top';
         
-        // Calculate starting position
-        const startX = 40;
-        const startY = this.textCanvas.height / 2;
-        
-        // Draw each character (allows for individual character coloring)
-        let currentX = startX;
-        for (let i = 0; i < this.displayedText.length; i++) {
-            const char = this.displayedText[i];
-            
-            // Example of coloring specific characters
-            // You can modify this logic to color characters however you want
-            if (char === '!') {
-                this.textContext.fillStyle = '#FF0000'; // Red exclamation marks
-            } else {
-                this.textContext.fillStyle = '#000000'; // Default black text
+        // Draw text based on layout and current display length
+        let charCount = 0;
+        for (const line of this.textLayout) {
+            for (const charInfo of line.chars) {
+                if (charCount >= this.displayedText.length) break;
+                
+                this.textContext.fillStyle = charInfo.color;
+                this.textContext.fillText(charInfo.char, charInfo.x, line.y);
+                charCount++;
             }
-            
-            this.textContext.fillText(char, currentX, startY);
-            currentX += this.textContext.measureText(char).width;
+            if (charCount >= this.displayedText.length) break;
         }
         
         // Update texture
         this.textTexture.needsUpdate = true;
+    }
+    
+    getDisplayTextFromLayout(length) {
+        let text = '';
+        let count = 0;
+        
+        for (const line of this.textLayout) {
+            for (const charInfo of line.chars) {
+                if (count >= length) break;
+                text += charInfo.char;
+                count++;
+            }
+            if (count >= length) break;
+        }
+        
+        return text;
     }
     
     updateTextAnimation(deltaTime) {
@@ -118,9 +232,14 @@ export class DialogManager extends GameObject {
         
         this.timeAccumulator += deltaTime;
         
-        while (this.timeAccumulator >= this.charDelay && this.charIndex < this.currentText.length) {
+        let totalChars = 0;
+        for (const line of this.textLayout) {
+            totalChars += line.chars.length;
+        }
+        
+        while (this.timeAccumulator >= this.charDelay && this.charIndex < totalChars) {
             this.timeAccumulator -= this.charDelay;
-            this.displayedText += this.currentText[this.charIndex];
+            this.displayedText = this.getDisplayTextFromLayout(this.charIndex + 1);
             this.charIndex++;
             this.updateText();
             
@@ -130,7 +249,7 @@ export class DialogManager extends GameObject {
             }
         }
         
-        this.isAnimating = this.charIndex < this.currentText.length;
+        this.isAnimating = this.charIndex < totalChars;
     }
     
     setText(text) {
@@ -139,6 +258,10 @@ export class DialogManager extends GameObject {
         this.charIndex = 0;
         this.isAnimating = true;
         this.timeAccumulator = 0;
+        
+        // Pre-calculate the text layout
+        this.textLayout = this.calculateTextLayout(text);
+        
         this.updateText();
     }
     
@@ -200,7 +323,7 @@ export class DialogManager extends GameObject {
             if (intersects.length > 0) {
                 if (this.isAnimating) {
                     // Skip animation and show full text
-                    this.displayedText = this.currentText;
+                    this.displayedText = this.getDisplayTextFromLayout(this.textLayout.reduce((sum, line) => sum + line.chars.length, 0));
                     this.charIndex = this.currentText.length;
                     this.isAnimating = false;
                     this.updateText();
