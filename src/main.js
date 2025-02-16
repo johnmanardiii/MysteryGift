@@ -123,11 +123,6 @@ class Game {
         document.documentElement.style.position = 'fixed';
         document.documentElement.style.overflow = 'hidden';
 
-        if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock('portrait')
-                .catch(err => console.log('Screen orientation lock failed:', err));
-        }
-
         // Start the game loop
         requestAnimationFrame((time) => this.update(time));
     }
