@@ -13,7 +13,7 @@ export class DialogManager extends GameObject {
         // Configure dialog dimensions
         this.dialogWidth = 2.8;
         this.dialogHeight = 1.9;
-        this.textPadding = 0.2;
+        this.textPadding = 0.3;
         
         // Animation properties
         this.isAnimating = false;
@@ -82,7 +82,7 @@ export class DialogManager extends GameObject {
 
     calculateTextLayout(text) {
         const padding = 50;
-        const lineHeight = 100;
+        const lineHeight = 120;
         const maxWidth = this.textCanvas.width - (padding);
         
         this.textContext.font = 'bold 80px Arial';
@@ -96,7 +96,7 @@ export class DialogManager extends GameObject {
         // Pre-calculate positions for each character
         let inColorTag = false;
         let colorBuffer = '';
-        let currentColor = '#000000';
+        let currentColor = '#1a1712';
         
         for (let i = 0; i < text.length; i++) {
             const char = text[i];
@@ -112,7 +112,7 @@ export class DialogManager extends GameObject {
                 if (char === ']') {
                     inColorTag = false;
                     if (colorBuffer.startsWith('/')) {
-                        currentColor = '#000000';
+                        currentColor = '#1a1712';
                     } else {
                         currentColor = colorBuffer;
                     }
