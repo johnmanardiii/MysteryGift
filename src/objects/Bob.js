@@ -72,6 +72,31 @@ export class Bob extends FBXModel {
         this.closed_eye = lt("e.2.png");
         this.hell_yea_eye = lt("e.7.png");
 
+        this.smile_mouth = lt("m.0.png");
+        this.open_med_mouth = lt("m.1.png");
+        this.way_open_mouth = lt("m.2.png");
+        this.frown_mouth = lt("m.3.png");
+        this.med_frown = lt("m.4.png");
+        this.big_frown = lt("m.5.png");
+
+        this.eyeTexs = {
+            "sad":this.sad_eye,
+            "happy":this.happy_eye,
+            "regular":this.regular_eye,
+            "squint":this.squint_eye,
+            "closed":this.closed_eye,
+            "very_happy":this.hell_yea_eye
+        };
+
+        this.mouthTexs = {
+            "smile1":this.smile_mouth,
+            "smile2":this.open_med_mouth,
+            "smile3":this.way_open_mouth,
+            "frown1":this.frown_mouth,
+            "frown2":this.med_frown,
+            "frown3":this.big_frown
+        }
+
         this.onLoad((model) => {
             this.mesh.traverse((child) => {
                 if(child.isMesh) {
@@ -85,11 +110,22 @@ export class Bob extends FBXModel {
                     }
                 }
             });
+
+            idle();
         });
         super.load(scene, loadingManager);
     }
 
     // texture swapping methods (head)
+    setEyes(name) {
+        this.eyes.material.map = this.eyeTexs[name];
+        this.eyes.material.needsUpdate = true;
+    }
+
+    setMouth(name) {
+        this.mouth.material.map = this.mouthTexs[name];
+        this.mouth.material.needsUpdate = true;
+    }
 
     // texture swapping methods (mouth)
 

@@ -13,7 +13,6 @@ class Game {
         this.setupScene();
 
         this.bob.setTransitionSpeed(0.5); // Half-second transitions
-        this.bob.idle();
         
         window.addEventListener('pointerdown', (event) => {
             this.bob.waveOnce(0.2);
@@ -123,6 +122,11 @@ class Game {
         document.body.style.position = 'fixed';
         document.documentElement.style.position = 'fixed';
         document.documentElement.style.overflow = 'hidden';
+
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('portrait')
+                .catch(err => console.log('Screen orientation lock failed:', err));
+        }
 
         // Start the game loop
         requestAnimationFrame((time) => this.update(time));
