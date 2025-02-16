@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Bob } from './objects/Bob';
-import { GameObject } from './objects/GameObject';
+import { DialogManager } from './objects/DialogManager';
 
 // Enhanced Game class
 class Game {
@@ -87,6 +87,12 @@ class Game {
         this.bob = new Bob(modelPath);
         this.addGameObject(this.bob);
         this.bob.load(this.scene, this.loadingManager);
+
+        this.dialogManager = new DialogManager(this);
+        this.addGameObject(this.dialogManager);
+        
+        // Set initial text
+        this.dialogManager.setText("Hello! Click me to toggle the dialog box!");
     }
 
     addGameObject(gameObject) {

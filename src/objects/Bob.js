@@ -139,6 +139,8 @@ export class Bob extends FBXModel {
     waveOnce(transitionSpeed = this.animConfig.transitionSpeed) {
         if(this.currentState !== this.AnimationStates.WAVE)
         {
+            // set mouth to happy for now:
+            this.setMouth("smile3");
             super.playOneShot(
                 this.AnimationStates.WAVE,      // Wave animation
                 this.AnimationStates.IDLE,      // Return to idle
@@ -146,6 +148,7 @@ export class Bob extends FBXModel {
                 this.animConfig.waveToIdleDelay, // Transition out
                 () => {
                     this.currentState = this.AnimationStates.IDLE; // Update state when animation completes
+                    this.setMouth("smile1");
                 }
             );
             this.currentState = this.AnimationStates.WAVE;
