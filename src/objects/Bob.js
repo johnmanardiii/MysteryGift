@@ -12,7 +12,7 @@ export class Bob extends FBXModel {
     {
         super(path, {
             scale: .15,
-            position: new THREE.Vector3(0, -1, 0),
+            position: new THREE.Vector3(0, -1.5, 0),
             usesBasicMaterial: true
         });
         
