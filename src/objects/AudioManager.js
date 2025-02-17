@@ -12,7 +12,7 @@ export class AudioManager extends GameObject {
         this.loadingPromise = null;
 
         // Bind methods to use in event listeners
-        this.init = this.init.bind(this);
+        // this.init = this.init.bind(this);
         this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
         this.cleanup = this.cleanup.bind(this);
         
@@ -95,7 +95,7 @@ export class AudioManager extends GameObject {
             this.bgm = await this.context.decodeAudioData(this.audioData);
             
             console.log('Starting playback...');
-            this.playBackgroundMusic();
+            this.game.audioManager.playBackgroundMusic();
             this.isInitialized = true;
         } catch (error) {
             console.error('Failed to initialize audio:', error);
