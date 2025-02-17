@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GameObject } from './GameObject';
+import { AudioManager } from './AudioManager';
 
 export class IntroManager extends GameObject {
     constructor(game) {
@@ -120,10 +121,8 @@ export class IntroManager extends GameObject {
         this.clicked = true;
         
         // Start the transition
+        this.game.audioManager = new AudioManager(this.game);
         this.startTransition();
-        
-        // Initialize audio system right after user interaction
-        this.game.audioManager.init();
     }
     
     startTransition() {
