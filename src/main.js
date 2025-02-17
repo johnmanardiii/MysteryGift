@@ -104,9 +104,6 @@ class Game {
                 // sound: "music"
             }
         ]);
-
-        // Play the sequence:
-        this.sequenceManager.playSequence('intro');
     }
 
     createInitialObjects() {

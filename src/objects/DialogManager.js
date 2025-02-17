@@ -355,8 +355,8 @@ export class DialogManager extends GameObject {
             // Schedule text animation to start after textStartDelay
             setTimeout(() => {
                 this.forceStopAnimating = false;
-                this.isAnimating = true;
                 this.timeAccumulator = 0;
+                this.game.sequenceManager.playSequence('intro');
             }, this.textStartDelay * 1000);
         }
     }
