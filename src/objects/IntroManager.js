@@ -132,6 +132,7 @@ export class IntroManager extends GameObject {
         // Starting scale
         const startScale = this.textSprite.scale.x;
         const targetScale = startScale * 2; // Double the size
+        this.game.dialogManager.fadeIn("testing gonna remove this", 2, 1);
         
         const animate = (currentTime) => {
             const elapsed = (currentTime - startTime) / 1000; // Convert to seconds
@@ -158,7 +159,6 @@ export class IntroManager extends GameObject {
                 this.cleanup();
                 // Start audio and hide intro
                 this.game.audioManager.init();
-                this.game.dialogManager.fadeIn("testing gonna remove this", 0, 2);
                 this.visible = false;
             }
         };

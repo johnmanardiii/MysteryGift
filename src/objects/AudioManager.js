@@ -9,10 +9,17 @@ export class AudioManager extends GameObject {
         this.bgmSource = null;
         this.isLoaded = false;
 
-        // Bind the init method to use in event listener
+        // Bind methods to use in event listeners
         this.init = this.init.bind(this);
+        this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
+        this.cleanup = this.cleanup.bind(this);
         
+        // Add visibility change listener
         document.addEventListener('visibilitychange', this.handleVisibilityChange);
+
+        // Add cleanup listeners
+        window.addEventListener('pagehide', this.cleanup);
+        window.addEventListener('beforeunload', this.cleanup);
 
         // Add click listener to initialize audio
         window.addEventListener('pointerdown', this.init, { once: true });
@@ -26,6 +33,27 @@ export class AudioManager extends GameObject {
         }
     }
 
+    cleanup() {
+        // Stop and disconnect all audio nodes
+        if (this.bgmSource) {
+            this.bgmSource.stop();
+            this.bgmSource.disconnect();
+        }
+        
+        if (this.gainNode) {
+            this.gainNode.disconnect();
+        }
+
+        // Close the audio context
+        if (this.context) {
+            this.context.close();
+        }
+
+        // Remove event listeners
+        document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+        window.removeEventListener('pagehide', this.cleanup);
+        window.removeEventListener('beforeunload', this.cleanup);
+    }
 
     async init() {
         // Return if already initialized

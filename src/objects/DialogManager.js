@@ -32,6 +32,8 @@ export class DialogManager extends GameObject {
         
         // Text layout properties
         this.textLayout = [];
+
+        this.forceStopAnimating = false;
         
         // Create canvas for text
         this.setupTextSystem();
@@ -239,7 +241,7 @@ export class DialogManager extends GameObject {
     }
     
     updateTextAnimation(deltaTime) {
-        if (!this.isAnimating) return;
+        if (!this.isAnimating || this.forceStopAnimating) return;
         
         this.timeAccumulator += deltaTime;
         
@@ -310,10 +312,12 @@ export class DialogManager extends GameObject {
         this.fadeProgress = 0;
         
         // Initialize the text but don't start animating yet
+        
         this.setText(initialMessage);
         this.displayedText = '';
         this.charIndex = 0;
         this.isAnimating = false;
+        this.forceStopAnimating = true;
         
         // Make sure opacity starts at 0
         if (this.sprite) {
@@ -350,6 +354,7 @@ export class DialogManager extends GameObject {
             
             // Schedule text animation to start after textStartDelay
             setTimeout(() => {
+                this.forceStopAnimating = false;
                 this.isAnimating = true;
                 this.timeAccumulator = 0;
             }, this.textStartDelay * 1000);

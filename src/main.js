@@ -20,7 +20,8 @@ class Game {
         window.addEventListener('pointerdown', (event) => {
             // todo: move this to a function so i can handle pointer more directly
             // also make this not so direclty tied to clicking!
-            if (this.dialogManager && this.sequenceManager && !this.dialogManager.isAnimating)
+            if (this.dialogManager && this.sequenceManager && !this.dialogManager.isAnimating
+                && !this.dialogManager.forceStopAnimating)
             {
                 this.sequenceManager.playNextStep();
             }
