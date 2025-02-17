@@ -43,9 +43,7 @@ export class AudioManager extends GameObject {
                 this.isInitialized = true;
                 
                 console.log('Background music loaded successfully');
-
-                // start playing first bgm:
-                this.playSound("bgm", {volume:.5, loop:true})
+                this.game.audioManager.playSound("bgm", {volume:.5, loop:true})
             },
             undefined,
             (error) => {
