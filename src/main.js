@@ -92,7 +92,7 @@ class Game {
         // Register a sequence:
         this.sequenceManager.registerSequence('intro', [
             {
-                text: "Hello! very very long sentence to test out interrupting during talking",
+                text: "I was just napping- I mean looking for you to say happy birthday!",
                 expression: { eyes: "happy", mouth: "smile1" },
                 animation: { type: "wave" },
                 // sound: "greeting"
