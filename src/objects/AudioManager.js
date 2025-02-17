@@ -12,9 +12,20 @@ export class AudioManager extends GameObject {
         // Bind the init method to use in event listener
         this.init = this.init.bind(this);
         
+        document.addEventListener('visibilitychange', this.handleVisibilityChange);
+
         // Add click listener to initialize audio
         window.addEventListener('pointerdown', this.init, { once: true });
     }
+
+    handleVisibilityChange() {
+        if (document.hidden) {
+            this.context?.suspend();
+        } else {
+            this.context?.resume();
+        }
+    }
+
 
     async init() {
         // Return if already initialized
