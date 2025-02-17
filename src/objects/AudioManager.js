@@ -7,20 +7,25 @@ export class AudioManager extends GameObject {
         this.bgm = null;
         this.context = null;
         this.bgmSource = null;
+        this.gainNode = null;
         this.isLoaded = false;
         this.isInitialized = false;
+        this.isPlaying = false;
         this.loadingPromise = null;
+        this.audioData = null;
 
         // Bind methods to use in event listeners
-        // this.init = this.init.bind(this);
         this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
+        this.handleFocus = this.handleFocus.bind(this);
+        this.handleBlur = this.handleBlur.bind(this);
+        this.handlePageHide = this.handlePageHide.bind(this);
         this.cleanup = this.cleanup.bind(this);
         
-        // Add visibility change listener
+        // Add all event listeners
         document.addEventListener('visibilitychange', this.handleVisibilityChange);
-
-        // Add cleanup listeners
-        window.addEventListener('pagehide', this.cleanup);
+        window.addEventListener('focus', this.handleFocus);
+        // window.addEventListener('blur', this.handleBlur);
+        window.addEventListener('pagehide', this.handlePageHide);
         window.addEventListener('beforeunload', this.cleanup);
         
         // Start preloading immediately and store the promise
@@ -29,28 +34,101 @@ export class AudioManager extends GameObject {
 
     handleVisibilityChange() {
         if (document.hidden) {
-            this.context?.suspend();
+            this.pauseAudio();
         } else {
-            this.context?.resume();
+            this.resumeAudio();
+        }
+    }
+
+    handleFocus() {
+        this.resumeAudio();
+    }
+
+    handleBlur() {
+        this.pauseAudio();
+    }
+
+    handlePageHide() {
+        // Force immediate pause on page hide (especially important for iOS)
+        this.pauseAudio(true);
+    }
+
+    pauseAudio(immediate = false) {
+        if (!this.context || !this.isPlaying) return;
+
+        try {
+            if (immediate) {
+                // Immediate pause for page hide
+                if (this.gainNode) {
+                    this.gainNode.gain.value = 0;
+                }
+                this.context.suspend();
+            } else {
+                // Fade out over 0.5 seconds
+                const now = this.context.currentTime;
+                this.gainNode.gain.linearRampToValueAtTime(0, now + 0.5);
+                setTimeout(() => {
+                    if (this.context && this.context.state !== 'closed') {
+                        this.context.suspend();
+                    }
+                }, 500);
+            }
+            this.isPlaying = false;
+        } catch (error) {
+            console.error('Error pausing audio:', error);
+        }
+    }
+
+    resumeAudio() {
+        if (!this.context || this.isPlaying || this.context.state === 'closed') return;
+
+        try {
+            this.context.resume().then(() => {
+                // Only fade in if we still have an active context and gain node
+                if (this.context && this.context.state === 'running' && this.gainNode) {
+                    const now = this.context.currentTime;
+                    this.gainNode.gain.linearRampToValueAtTime(0.4, now + 2.0);
+                    this.isPlaying = true;
+                }
+            });
+        } catch (error) {
+            console.error('Error resuming audio:', error);
         }
     }
 
     cleanup() {
+        this.pauseAudio(true);
+        
         if (this.bgmSource) {
-            this.bgmSource.stop();
-            this.bgmSource.disconnect();
+            try {
+                this.bgmSource.stop();
+                this.bgmSource.disconnect();
+            } catch (error) {
+                console.error('Error cleaning up bgmSource:', error);
+            }
         }
         
         if (this.gainNode) {
-            this.gainNode.disconnect();
+            try {
+                this.gainNode.disconnect();
+            } catch (error) {
+                console.error('Error cleaning up gainNode:', error);
+            }
         }
 
-        if (this.context) {
-            this.context.close();
+        if (this.context && this.context.state !== 'closed') {
+            try {
+                this.context.close();
+            } catch (error) {
+                console.error('Error closing audio context:', error);
+            }
         }
 
+        // Remove all event listeners
         document.removeEventListener('visibilitychange', this.handleVisibilityChange);
-        window.removeEventListener('pagehide', this.cleanup);
+        window.removeEventListener('focus', this.handleFocus);
+        window.removeEventListener('blur', this.handleBlur);
+        window.removeEventListener('pagehide', this.handlePageHide);
         window.removeEventListener('beforeunload', this.cleanup);
     }
 
@@ -92,13 +170,14 @@ export class AudioManager extends GameObject {
             
             console.log('Decoding audio data...');
             // Decode the preloaded audio data
-            this.bgm = await this.context.decodeAudioData(this.audioData);
+            this.bgm = await this.context.decodeAudioData(this.audioData.slice(0));
             
             console.log('Starting playback...');
-            this.game.audioManager.playBackgroundMusic();
+            this.playBackgroundMusic();
             this.isInitialized = true;
         } catch (error) {
             console.error('Failed to initialize audio:', error);
+            throw error; // Re-throw so the game can handle initialization failure
         }
     }
 
@@ -130,9 +209,12 @@ export class AudioManager extends GameObject {
             this.gainNode.gain.setValueAtTime(0, now);
             this.gainNode.gain.linearRampToValueAtTime(0.4, now + 2.0);
             
+            this.isPlaying = true;
             console.log('Background music started successfully');
         } catch (error) {
             console.error('Error starting background music:', error);
+            this.isPlaying = false;
+            throw error;
         }
     }
 }

@@ -91,15 +91,75 @@ class Game {
 
         // Register a sequence:
         this.sequenceManager.registerSequence('intro', [
+            // part where he turns around all bored
             {
-                text: "I was just napping- I mean looking for you to say happy birthday!",
+                text:"...    ",
+                // animation: {type: "turn_around"},
+            },
+            {
+                text: "Oh… Hey [#0066CC]Fiona[/]! How you doing?",
                 expression: { eyes: "happy", mouth: "smile1" },
                 animation: { type: "wave" },
                 // sound: "greeting"
             },
             {
-                text: "Let's dance!",
+                text: "I was just napping- I mean looking for you to say happy birthday!",
+                expression: { eyes: "regular", mouth: "smile2" },
+                // sound: "greeting"
+            },
+            {
+                text: "Wait… your birthday was a month ago?",
+                expression: { eyes: "sad", mouth: "frown2" },
+                // sound: "greeting"
+            },
+            {
+                text: "My shoulder went poof at ninja warrior so I've been napping extra...",
+                expression: { eyes: "closed", mouth: "frown3" },
+                // sound: "greeting"
+            },
+            {
+                text: "But hey, I brought you a present today!",
+                expression: { eyes: "squint", mouth: "smile2" },
+                // sound: "greeting"
+            },
+            {
+                text: "It's like a Microsoft code thingy for games and stuff.",
+                expression: { eyes: "closed", mouth: "smile1" },
+                // sound: "greeting"
+            },
+            {
+                text: "I hear you can play lots of fun games like [#f21c00]Diablo 4[/],",
+                expression: { eyes: "happy", mouth: "smile2" },
+                // sound: "greeting"
+            },
+            {
+                text: "[#01700c]John[/] can’t stop talking about that game!",
                 expression: { eyes: "very_happy", mouth: "smile3" },
+                // sound: "greeting"
+            },
+            {
+                text: "And you can get all the [#f21c00]Valorant[/] agents or whatever, pthhpth!",
+                expression: { eyes: "regular", mouth: "smile2" },
+                // sound: "greeting"
+            },
+            {
+                text: "-PLACEHOLDER FOR CODE-",
+                expression: { eyes: "regular", mouth: "smile1" },
+                // sound: "greeting"
+            },
+            {
+                text: "You da bes [#0066CC]Fiona[/] and you bring good people together.",
+                expression: { eyes: "happy", mouth: "smile2" },
+                // sound: "greeting"
+            },
+            {
+                text: "I hope the 25th year of your life is a good one!",
+                expression: { eyes: "closed", mouth: "smile3" },
+                // sound: "greeting"
+            },
+            {
+                text: "Let's dance!",
+                expression: { eyes: "very_happy", mouth: "smile2" },
                 animation: { type: "dance" },
                 // sound: "music"
             }

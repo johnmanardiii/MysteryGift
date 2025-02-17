@@ -136,6 +136,8 @@ export class IntroManager extends GameObject {
         const startScale = this.textSprite.scale.x;
         const targetScale = startScale * 2; // Double the size
         this.game.dialogManager.fadeIn(2, 1);
+        this.game.bob.setMouth("smile1");
+        this.game.bob.setEyes("squint");
         
         const animate = (currentTime) => {
             const elapsed = (currentTime - startTime) / 1000; // Convert to seconds

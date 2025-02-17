@@ -146,7 +146,6 @@ export class Bob extends FBXModel {
             }
     
             // set mouth to happy for now:
-            this.setMouth("smile3");
             super.playOneShot(
                 this.AnimationStates.WAVE,      // Wave animation
                 this.AnimationStates.IDLE,      // Return to idle
