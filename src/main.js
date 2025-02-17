@@ -113,7 +113,7 @@ class Game {
                 // sound: "greeting"
             },
             {
-                text: "My shoulder went poof at ninja warrior so I've been napping extra...",
+                text: "Must have missed it sleeping in...",
                 expression: { eyes: "closed", mouth: "frown3" },
                 // sound: "greeting"
             },
@@ -123,7 +123,7 @@ class Game {
                 // sound: "greeting"
             },
             {
-                text: "It's like a Microsoft code thingy for games and stuff.",
+                text: "It's a Microsoft code thingy for games and stuff.",
                 expression: { eyes: "closed", mouth: "smile1" },
                 // sound: "greeting"
             },
@@ -134,7 +134,7 @@ class Game {
             },
             {
                 text: "[#01700c]John[/] can’t stop talking about that game!",
-                expression: { eyes: "very_happy", mouth: "smile3" },
+                expression: { eyes: "happy", mouth: "smile3" },
                 // sound: "greeting"
             },
             {
@@ -153,7 +153,7 @@ class Game {
                 // sound: "greeting"
             },
             {
-                text: "I hope the 25th year of your life is a good one!",
+                text: "I hope your 25th year is a good one!",
                 expression: { eyes: "closed", mouth: "smile3" },
                 // sound: "greeting"
             },
