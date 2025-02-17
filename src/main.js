@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Bob } from './objects/Bob';
 import { DialogManager } from './objects/DialogManager';
 import { SequenceManager } from './objects/SequenceManager';
+import { AudioManager } from './objects/AudioManager';
 
 // Enhanced Game class
 class Game {
@@ -92,13 +93,13 @@ class Game {
                 text: "Hello! very very long sentence to test out interrupting during talking",
                 expression: { eyes: "happy", mouth: "smile1" },
                 animation: { type: "wave" },
-                sound: "greeting"
+                // sound: "greeting"
             },
             {
                 text: "Let's dance!",
                 expression: { eyes: "very_happy", mouth: "smile3" },
                 animation: { type: "dance" },
-                sound: "music"
+                // sound: "music"
             }
         ]);
 
@@ -118,8 +119,12 @@ class Game {
         this.dialogManager = new DialogManager(this);
         this.addGameObject(this.dialogManager);
         
-        // Set initial text
-        this.dialogManager.setText("Hello! Click me to toggle the [#0066CC]happy birthday[/] box!");
+        // Set initial text (example of colored text)
+        // this.dialogManager.setText("Hello! Click me to toggle the [#0066CC]happy birthday[/] box!");
+
+        this.audioManager = new AudioManager(this);
+        this.addGameObject(this.audioManager);
+        this.audioManager.init();
         
         // sequence manager depends on a lot of stuff, so wait for everything to load:
         this.loadingManager.onLoad = () => {

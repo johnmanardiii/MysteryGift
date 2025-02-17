@@ -82,8 +82,18 @@ export class SequenceManager extends GameObject {
 
         // Play sound if specified
         if (beat.sound) {
-            // TODO: Implement sound system
-            console.log(`Playing sound: ${beat.sound}`);
+            this.game.audioManager.playSound(beat.sound.id, {
+                category: beat.sound.category,
+                loop: beat.sound.loop,
+                volume: beat.sound.volume
+            });
+        }
+    
+        // Set dialogue
+        if (beat.text) {
+            this.game.dialogManager.setText(beat.text);
+        } else {
+            this.playNextStep();
         }
 
         // Set dialogue - this will trigger the next beat when complete
