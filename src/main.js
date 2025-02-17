@@ -3,6 +3,7 @@ import { Bob } from './objects/Bob';
 import { DialogManager } from './objects/DialogManager';
 import { SequenceManager } from './objects/SequenceManager';
 import { AudioManager } from './objects/AudioManager';
+import { IntroManager } from './objects/IntroManager';
 
 // Enhanced Game class
 class Game {
@@ -19,7 +20,7 @@ class Game {
         window.addEventListener('pointerdown', (event) => {
             // todo: move this to a function so i can handle pointer more directly
             // also make this not so direclty tied to clicking!
-            if(!this.dialogManager.isAnimating)
+            if (this.dialogManager && this.sequenceManager && !this.dialogManager.isAnimating)
             {
                 this.sequenceManager.playNextStep();
             }
@@ -108,6 +109,9 @@ class Game {
     }
 
     createInitialObjects() {
+        this.introManager = new IntroManager(this);
+        this.addGameObject(this.introManager);
+
         // Example of loading an FBX model
         const modelPath = window.location.hostname === 'localhost'
         ? '/models/fbx/bobdance.fbx'             // Local development

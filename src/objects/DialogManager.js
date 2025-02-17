@@ -21,6 +21,15 @@ export class DialogManager extends GameObject {
         this.charDelay = 0.05; // Seconds per character
         this.timeAccumulator = 0;
         
+        // Fade animation properties
+        this.isFading = false;
+        this.fadeProgress = 0;
+        this.fadeDuration = 1.0;
+        this.fadeStartDelay = 0;
+        this.textStartDelay = 0.5; // Delay after fade before text starts
+        this.initialDelay = 0;
+        this.delayProgress = 0;
+        
         // Text layout properties
         this.textLayout = [];
         
@@ -46,7 +55,8 @@ export class DialogManager extends GameObject {
             map: this.textTexture,
             transparent: true,
             depthTest: false,
-            depthWrite: false
+            depthWrite: false,
+            opacity: 0 // Start invisible
         });
         
         this.textSprite = new THREE.Sprite(textMaterial);
@@ -70,7 +80,8 @@ export class DialogManager extends GameObject {
                 map: texture,
                 transparent: true,
                 depthTest: false,
-                depthWrite: false
+                depthWrite: false,
+                opacity: 0 // Start invisible
             });
             
             this.sprite = new THREE.Sprite(material);
@@ -228,7 +239,6 @@ export class DialogManager extends GameObject {
     }
     
     updateTextAnimation(deltaTime) {
-
         if (!this.isAnimating) return;
         
         this.timeAccumulator += deltaTime;
@@ -286,9 +296,69 @@ export class DialogManager extends GameObject {
             this.textSprite.position.z += 0.01; // Slightly in front
         }
     }
+
+    fadeIn(initialMessage = 'Hello! This is a test message...', fadeDelay = 0, textDelay = 0.5) {
+        // Store animation timing parameters
+        this.fadeStartDelay = fadeDelay;
+        this.textStartDelay = textDelay;
+        this.initialDelay = fadeDelay;
+        this.delayProgress = 0;
+        
+        // Reset states
+        this.show();
+        this.isFading = true;
+        this.fadeProgress = 0;
+        
+        // Initialize the text but don't start animating yet
+        this.setText(initialMessage);
+        this.displayedText = '';
+        this.charIndex = 0;
+        this.isAnimating = false;
+        
+        // Make sure opacity starts at 0
+        if (this.sprite) {
+            this.sprite.material.opacity = 0;
+        }
+        if (this.textSprite) {
+            this.textSprite.material.opacity = 0;
+        }
+    }
+
+    updateFadeAnimation(deltaTime) {
+        if (!this.isFading) return;
+
+        // Handle initial delay
+        if (this.delayProgress < this.initialDelay) {
+            this.delayProgress += deltaTime;
+            return;
+        }
+
+        this.fadeProgress += deltaTime;
+        const alpha = Math.min((this.fadeProgress) / this.fadeDuration, 1.0);
+        
+        // Fade in the sprites
+        if (this.sprite) {
+            this.sprite.material.opacity = alpha;
+        }
+        if (this.textSprite) {
+            this.textSprite.material.opacity = alpha;
+        }
+        
+        // Check if fade is complete
+        if (this.fadeProgress >= this.fadeDuration) {
+            this.isFading = false;
+            
+            // Schedule text animation to start after textStartDelay
+            setTimeout(() => {
+                this.isAnimating = true;
+                this.timeAccumulator = 0;
+            }, this.textStartDelay * 1000);
+        }
+    }
     
     update(deltaTime) {
         this.updatePosition();
+        this.updateFadeAnimation(deltaTime);
         this.updateTextAnimation(deltaTime);
     }
     

@@ -63,15 +63,20 @@ export class AudioManager extends GameObject {
         this.bgmSource.buffer = this.bgm;
         this.bgmSource.loop = true;
 
-        // Add volume control
-        const gainNode = this.context.createGain();
-        gainNode.gain.value = 0.4; // Set volume to 40%
+        // Add volume control with fade-in
+        this.gainNode = this.context.createGain();
+        this.gainNode.gain.value = 0; // Start silent
 
         // Connect nodes
-        this.bgmSource.connect(gainNode);
-        gainNode.connect(this.context.destination);
+        this.bgmSource.connect(this.gainNode);
+        this.gainNode.connect(this.context.destination);
 
         // Start playing
         this.bgmSource.start(0);
+        
+        // Fade in over 2 seconds
+        const now = this.context.currentTime;
+        this.gainNode.gain.setValueAtTime(0, now);
+        this.gainNode.gain.linearRampToValueAtTime(0.4, now + 2.0);
     }
 }
