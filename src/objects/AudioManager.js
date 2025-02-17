@@ -7,13 +7,24 @@ export class AudioManager extends GameObject {
         this.bgm = null;
         this.context = null;
         this.bgmSource = null;
+        this.isLoaded = false;
+
+        // Bind the init method to use in event listener
+        this.init = this.init.bind(this);
+        
+        // Add click listener to initialize audio
+        window.addEventListener('pointerdown', this.init, { once: true });
     }
 
     async init() {
+        // Return if already initialized
+        if (this.isLoaded) return;
+
         try {
             this.context = new (window.AudioContext || window.webkitAudioContext)();
             await this.loadBackgroundMusic();
             this.playBackgroundMusic();
+            this.isLoaded = true;
         } catch (error) {
             console.error('Failed to initialize audio:', error);
         }

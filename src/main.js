@@ -123,8 +123,6 @@ class Game {
         // this.dialogManager.setText("Hello! Click me to toggle the [#0066CC]happy birthday[/] box!");
 
         this.audioManager = new AudioManager(this);
-        this.addGameObject(this.audioManager);
-        this.audioManager.init();
         
         // sequence manager depends on a lot of stuff, so wait for everything to load:
         this.loadingManager.onLoad = () => {
