@@ -121,6 +121,9 @@ export class IntroManager extends GameObject {
         
         // Start the transition
         this.startTransition();
+        
+        // Initialize audio system right after user interaction
+        this.game.audioManager.init();
     }
     
     startTransition() {
@@ -157,8 +160,6 @@ export class IntroManager extends GameObject {
                 requestAnimationFrame(animate);
             } else {
                 this.cleanup();
-                // Start audio and hide intro
-                this.game.audioManager.init();
                 this.visible = false;
             }
         };

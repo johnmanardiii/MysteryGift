@@ -8,6 +8,8 @@ export class AudioManager extends GameObject {
         this.context = null;
         this.bgmSource = null;
         this.isLoaded = false;
+        this.isInitialized = false;
+        this.loadingPromise = null;
 
         // Bind methods to use in event listeners
         this.init = this.init.bind(this);
@@ -20,9 +22,9 @@ export class AudioManager extends GameObject {
         // Add cleanup listeners
         window.addEventListener('pagehide', this.cleanup);
         window.addEventListener('beforeunload', this.cleanup);
-
-        // Add click listener to initialize audio
-        window.addEventListener('pointerdown', this.init, { once: true });
+        
+        // Start preloading immediately and store the promise
+        this.loadingPromise = this.preloadAudio();
     }
 
     handleVisibilityChange() {
@@ -34,7 +36,6 @@ export class AudioManager extends GameObject {
     }
 
     cleanup() {
-        // Stop and disconnect all audio nodes
         if (this.bgmSource) {
             this.bgmSource.stop();
             this.bgmSource.disconnect();
@@ -44,67 +45,94 @@ export class AudioManager extends GameObject {
             this.gainNode.disconnect();
         }
 
-        // Close the audio context
         if (this.context) {
             this.context.close();
         }
 
-        // Remove event listeners
         document.removeEventListener('visibilitychange', this.handleVisibilityChange);
         window.removeEventListener('pagehide', this.cleanup);
         window.removeEventListener('beforeunload', this.cleanup);
     }
 
-    async init() {
-        // Return if already initialized
-        if (this.isLoaded) return;
-
-        try {
-            this.context = new (window.AudioContext || window.webkitAudioContext)();
-            await this.loadBackgroundMusic();
-            this.playBackgroundMusic();
-            this.isLoaded = true;
-        } catch (error) {
-            console.error('Failed to initialize audio:', error);
-        }
-    }
-
-    async loadBackgroundMusic() {
+    async preloadAudio() {
         const bgmPath = window.location.hostname === 'localhost'
             ? '/sounds/acmusic.mp3'
             : '/MysteryGift/sounds/acmusic.mp3';
 
         try {
+            console.log('Starting audio preload...');
             const response = await fetch(bgmPath);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const arrayBuffer = await response.arrayBuffer();
-            this.bgm = await this.context.decodeAudioData(arrayBuffer);
+            this.audioData = arrayBuffer;
+            this.isLoaded = true;
+            console.log('Audio preload complete');
         } catch (error) {
-            console.error('Failed to load background music:', error);
+            console.error('Failed to preload audio data:', error);
+            throw error; // Re-throw to handle in init()
+        }
+    }
+
+    async init() {
+        // Return if already fully initialized
+        if (this.isInitialized) return;
+
+        try {
+            // Wait for preload to complete if it hasn't already
+            if (!this.isLoaded) {
+                console.log('Waiting for audio preload to complete...');
+                await this.loadingPromise;
+            }
+
+            console.log('Creating audio context...');
+            // Create context only after user interaction
+            this.context = new (window.AudioContext || window.webkitAudioContext)();
+            
+            console.log('Decoding audio data...');
+            // Decode the preloaded audio data
+            this.bgm = await this.context.decodeAudioData(this.audioData);
+            
+            console.log('Starting playback...');
+            this.playBackgroundMusic();
+            this.isInitialized = true;
+        } catch (error) {
+            console.error('Failed to initialize audio:', error);
         }
     }
 
     playBackgroundMusic() {
-        if (!this.bgm) return;
+        if (!this.bgm || !this.context) {
+            console.error('Cannot play: missing bgm or context');
+            return;
+        }
 
-        // Create and configure source
-        this.bgmSource = this.context.createBufferSource();
-        this.bgmSource.buffer = this.bgm;
-        this.bgmSource.loop = true;
+        try {
+            // Create and configure source
+            this.bgmSource = this.context.createBufferSource();
+            this.bgmSource.buffer = this.bgm;
+            this.bgmSource.loop = true;
 
-        // Add volume control with fade-in
-        this.gainNode = this.context.createGain();
-        this.gainNode.gain.value = 0; // Start silent
+            // Add volume control with fade-in
+            this.gainNode = this.context.createGain();
+            this.gainNode.gain.value = 0; // Start silent
 
-        // Connect nodes
-        this.bgmSource.connect(this.gainNode);
-        this.gainNode.connect(this.context.destination);
+            // Connect nodes
+            this.bgmSource.connect(this.gainNode);
+            this.gainNode.connect(this.context.destination);
 
-        // Start playing
-        this.bgmSource.start(0);
-        
-        // Fade in over 2 seconds
-        const now = this.context.currentTime;
-        this.gainNode.gain.setValueAtTime(0, now);
-        this.gainNode.gain.linearRampToValueAtTime(0.4, now + 2.0);
+            // Start playing
+            this.bgmSource.start(0);
+            
+            // Fade in over 2 seconds
+            const now = this.context.currentTime;
+            this.gainNode.gain.setValueAtTime(0, now);
+            this.gainNode.gain.linearRampToValueAtTime(0.4, now + 2.0);
+            
+            console.log('Background music started successfully');
+        } catch (error) {
+            console.error('Error starting background music:', error);
+        }
     }
 }
