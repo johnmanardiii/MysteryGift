@@ -428,8 +428,15 @@ export class TextArrow extends GameObject {
         
         // Animation properties
         this.offset = 0;
-        this.speed = 2;
+        this.speed = 3;
         this.amplitude = 0.05;
+        
+        // Transition properties - much more damped now
+        this.currentScale = 0.5;
+        this.targetScale = 0.5;
+        this.scaleVelocity = 0;
+        this.scaleDamping = 0.4;  // Increased from 0.2
+        this.scaleSpringStrength = 0.15; // Reduced from 0.3
         
         this.loadArrow();
     }
@@ -445,15 +452,38 @@ export class TextArrow extends GameObject {
                 map: texture,
                 transparent: true,
                 depthTest: false,
-                depthWrite: false,
-                opacity: 1
+                depthWrite: false
             });
             
             this.sprite = new THREE.Sprite(material);
-            this.sprite.scale.set(0.5, 0.5, 1);
+            this.sprite.scale.set(this.currentScale, this.currentScale, 1);
             this.game.scene.add(this.sprite);
             this.updatePosition(0);
         });
+    }
+
+    getBounceEase(t) {
+        return Math.pow(Math.sin(t * Math.PI), 2);
+    }
+
+    updateScale(deltaTime) {
+        const scaleDiff = this.targetScale - this.currentScale;
+        
+        // Apply extra damping when appearing to reduce bouncing
+        const isAppearing = scaleDiff > 0;
+        const effectiveDamping = isAppearing ? this.scaleDamping * 1.5 : this.scaleDamping;
+        
+        const spring = scaleDiff * this.scaleSpringStrength;
+        this.scaleVelocity += spring;
+        this.scaleVelocity *= (1 - effectiveDamping);
+        this.currentScale += this.scaleVelocity;
+
+        if (this.sprite) {
+            const normalizedScale = this.currentScale / 0.5;
+            this.sprite.scale.set(this.currentScale, this.currentScale, 1);
+            this.sprite.material.opacity = normalizedScale;
+            this.sprite.visible = normalizedScale > 0.01;
+        }
     }
 
     updatePosition(floatOffset = 0) {
@@ -479,28 +509,25 @@ export class TextArrow extends GameObject {
     update(deltaTime) {
         if (!this.sprite || !this.dialogManager) return;
 
-        // Check dialog state to determine visibility
         const shouldShow = this.dialogManager.visible && 
                          !this.dialogManager.isAnimating && 
                          !this.dialogManager.forceStopAnimating &&
                          !this.forceHidden;
 
-        this.sprite.material.opacity = shouldShow ? 1 : 0;
-        this.sprite.visible = shouldShow;
+        this.targetScale = shouldShow ? 0.5 : 0;
+        this.updateScale(deltaTime);
 
-        if (shouldShow) {
+        if (this.currentScale > 0.01) {
             this.offset += deltaTime * this.speed;
-            const floatY = Math.sin(this.offset) * this.amplitude;
+            const normalizedBounce = this.getBounceEase(Math.sin(this.offset) * 0.5 + 0.5);
+            const floatY = normalizedBounce * this.amplitude;
             this.updatePosition(floatY);
         }
     }
 
     forceHide() {
         this.forceHidden = true;
-        if (this.sprite) {
-            this.sprite.material.opacity = 0;
-            this.sprite.visible = false;
-        }
+        this.targetScale = 0;
     }
 
     allowShow() {
