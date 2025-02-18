@@ -58,7 +58,7 @@ export class SequenceManager extends GameObject {
         // play a lil sound 
         if(this.currentStep != 0)
         {
-            this.game.audioManager.playSound('advance', {volume:.3})
+            this.game.audioManager.playSound('advance', {volume:.45})
         }
         
         // Execute expression changes if specified
@@ -89,7 +89,6 @@ export class SequenceManager extends GameObject {
         // Play sound if specified
         if (beat.sound) {
             this.game.audioManager.playSound(beat.sound.id, {
-                category: beat.sound.category,
                 loop: beat.sound.loop,
                 volume: beat.sound.volume
             });
@@ -111,40 +110,3 @@ export class SequenceManager extends GameObject {
         }
     }
 }
-
-const exampleSequence = [
-    {
-        text: "Hi there!",
-        expression: {
-            eyes: "happy",
-            mouth: "smile1"
-        },
-        animation: {
-            type: "wave",
-            speed: 0.2
-        },
-        sound: "greeting"
-    },
-    {
-        text: "Watch this!",
-        expression: {
-            eyes: "very_happy",
-            mouth: "smile3"
-        },
-        animation: {
-            type: "dance",
-            speed: 1.0
-        },
-        sound: "music"
-    },
-    {
-        text: "That was fun!",
-        expression: {
-            eyes: "regular",
-            mouth: "smile1"
-        },
-        animation: {
-            type: "idle"
-        }
-    }
-];

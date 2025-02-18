@@ -49,7 +49,8 @@ export class AudioManager extends GameObject {
         
         // Load all other sounds
         const sounds = {
-            'advance':'advancetext.mp3'
+            'advance':'advancetext.mp3',
+            'startup':'startupsound.mp3'
         };
 
         const base = window.location.hostname === 'localhost'
@@ -77,7 +78,8 @@ export class AudioManager extends GameObject {
                 this.currentBGM = sound;
                 
                 console.log('Background music loaded successfully');
-                this.playSound("bgm", { volume: 0.5, loop: true });
+                this.fadeIn("bgm", 2.0, { volume: 0.4, loop: true });
+                this.playSound("startup", {volume: .8, loop:false});
             },
             undefined,
             (error) => {
@@ -203,12 +205,15 @@ export class AudioManager extends GameObject {
         window.removeEventListener('beforeunload', this.cleanup);
     }
 
-    fadeIn(name, duration = 2.0) {
+    fadeIn(name, duration = 2.0, options = {}) {
         const soundPool = this.sounds.get(name);
         if (!soundPool || !soundPool[0]) return;
 
+        const { volume = 0.4, loop = false } = options;
+        
         const sound = soundPool[0];
         sound.setVolume(0);
+        sound.setLoop(loop);
         sound.play();
         
         const startTime = Date.now();
@@ -216,7 +221,7 @@ export class AudioManager extends GameObject {
             const elapsed = (Date.now() - startTime) / 1000;
             const progress = Math.min(elapsed / duration, 1);
             
-            sound.setVolume(progress * 0.4); // Max volume 0.4
+            sound.setVolume(progress * volume);
             
             if (progress < 1) {
                 requestAnimationFrame(animate);
