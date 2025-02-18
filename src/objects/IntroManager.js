@@ -69,6 +69,9 @@ export class IntroManager extends GameObject {
         window.addEventListener('pointerdown', this.handleClick);
 
         this.clicked = false;
+        this.loadingObjects = new Set();
+
+        this.message = ''
         
         // Draw initial text
         this.updateText();
@@ -87,19 +90,19 @@ export class IntroManager extends GameObject {
         // Add thick white outline for Animal Crossing look
         ctx.strokeStyle = 'white';
         ctx.lineWidth = 0;
-        ctx.strokeText('Tap to Start!', 
+        ctx.strokeText(this.message, 
             this.textCanvas.width/2, 
             this.textCanvas.height/2);
             
         // Add black outline
         ctx.strokeStyle = 'black';
         ctx.lineWidth = 8;
-        ctx.strokeText('Tap to Start!', 
+        ctx.strokeText(this.message, 
             this.textCanvas.width/2, 
             this.textCanvas.height/2);
             
         // Fill text
-        ctx.fillText('Tap to Start!', 
+        ctx.fillText(this.message, 
             this.textCanvas.width/2, 
             this.textCanvas.height/2);
             
@@ -114,10 +117,34 @@ export class IntroManager extends GameObject {
         const bounce = Math.sin(this.bounceOffset) * this.bounceAmount;
         this.textSprite.position.y = bounce;
     }
+
+    isLoaded() {
+        return this.loadingObjects.size === 0;
+    }
+
+    registerLoadingObject(object) {
+        this.loadingObjects.add(object);
+        this.updateLoadingState();
+    }
+
+    deregisterLoadingObject(object) {
+        this.loadingObjects.delete(object);
+        this.updateLoadingState();
+    }
+
+    updateLoadingState() {
+        if (this.loadingObjects.size === 0) {
+            this.message = 'Tap to Start!';
+        } else {
+            this.message = 'Loading...';
+        }
+        this.updateText();
+    }
     
     handleClick(event) {
         if (!this.visible) return;
         if(this.clicked) return;
+        if(!this.isLoaded()) return;
         this.clicked = true;
         
         // Start the transition

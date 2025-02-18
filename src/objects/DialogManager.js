@@ -38,6 +38,8 @@ export class DialogManager extends GameObject {
         // Create canvas for text
         this.setupTextSystem();
         this.loadDialogBackground();
+
+        this.arrow = new TextArrow(game, this);
     }
     
     setupTextSystem() {
@@ -365,6 +367,7 @@ export class DialogManager extends GameObject {
         this.updatePosition();
         this.updateFadeAnimation(deltaTime);
         this.updateTextAnimation(deltaTime);
+        this.arrow.update(deltaTime);
     }
     
     toggle() {
@@ -411,5 +414,96 @@ export class DialogManager extends GameObject {
         }
         
         return false;
+    }
+}
+
+export class TextArrow extends GameObject {
+    constructor(game, dialogManager) {
+        super();
+        this.game = game;
+        this.dialogManager = dialogManager;
+        this.sprite = null;
+        this.visible = true;
+        this.forceHidden = false;
+        
+        // Animation properties
+        this.offset = 0;
+        this.speed = 2;
+        this.amplitude = 0.05;
+        
+        this.loadArrow();
+    }
+    
+    loadArrow() {
+        const textureLoader = new THREE.TextureLoader(this.game.loadingManager);
+        const arrowPath = this.game.basePath + '/images/text_arrow.png';
+        
+        textureLoader.load(arrowPath, (texture) => {
+            texture.encoding = THREE.sRGBEncoding;
+            texture.colorSpace = THREE.SRGBColorSpace;
+            const material = new THREE.SpriteMaterial({ 
+                map: texture,
+                transparent: true,
+                depthTest: false,
+                depthWrite: false,
+                opacity: 1
+            });
+            
+            this.sprite = new THREE.Sprite(material);
+            this.sprite.scale.set(0.5, 0.5, 1);
+            this.game.scene.add(this.sprite);
+            this.updatePosition(0);
+        });
+    }
+
+    updatePosition(floatOffset = 0) {
+        if (!this.sprite) return;
+        
+        const camera = this.game.camera;
+        const distance = Math.abs(camera.position.z) * 0.9;
+        
+        const vFov = camera.fov * Math.PI / 180;
+        const height = 2.7 * Math.tan(vFov / 2) * distance;
+        const width = height * camera.aspect;
+        
+        const yOffset = height / 2 - 2.5;
+        const zPos = camera.position.z - distance;
+        
+        this.sprite.position.set(
+            0,
+            yOffset + floatOffset,
+            zPos + 0.01
+        );
+    }
+
+    update(deltaTime) {
+        if (!this.sprite || !this.dialogManager) return;
+
+        // Check dialog state to determine visibility
+        const shouldShow = this.dialogManager.visible && 
+                         !this.dialogManager.isAnimating && 
+                         !this.dialogManager.forceStopAnimating &&
+                         !this.forceHidden;
+
+        this.sprite.material.opacity = shouldShow ? 1 : 0;
+        this.sprite.visible = shouldShow;
+
+        if (shouldShow) {
+            this.offset += deltaTime * this.speed;
+            const floatY = Math.sin(this.offset) * this.amplitude;
+            this.updatePosition(floatY);
+        }
+    }
+
+    forceHide() {
+        this.forceHidden = true;
+        if (this.sprite) {
+            this.sprite.material.opacity = 0;
+            this.sprite.visible = false;
+        }
+    }
+
+    allowShow() {
+        this.forceHidden = false;
     }
 }

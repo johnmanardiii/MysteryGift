@@ -58,7 +58,7 @@ export class SequenceManager extends GameObject {
         // play a lil sound 
         if(this.currentStep != 0)
         {
-            this.game.audioManager.playSound('advance', {volume:.45})
+            this.game.audioManager.playSound('advance', {volume:.7})
         }
         
         // Execute expression changes if specified

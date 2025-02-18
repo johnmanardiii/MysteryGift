@@ -8,9 +8,9 @@ import { FBXModel } from "./FBXModel";
 // _002_cat00_mdl is mouth
 
 export class Bob extends FBXModel {
-    constructor(path)
+    constructor(path, game)
     {
-        super(path, {
+        super(path, game, {
             scale: .15,
             position: new THREE.Vector3(0, -1.5, 0),
             usesBasicMaterial: true
@@ -43,9 +43,11 @@ export class Bob extends FBXModel {
     {
         // load additional bob textures
         const texture_loader = new THREE.TextureLoader();
+        this.game.introManager.registerLoadingObject(this);
 
         const createTextureManager = (basePath) => {
             return (filename, mesh) => {
+                this.game.introManager.registerLoadingObject(basePath + filename);
                 const texture = texture_loader.load(basePath + filename);
                 texture.encoding = THREE.sRGBEncoding;
                 texture.colorSpace = THREE.SRGBColorSpace;
@@ -57,6 +59,7 @@ export class Bob extends FBXModel {
                     mesh.material.needsUpdate = true;
                 }
                 
+                this.game.introManager.deregisterLoadingObject(basePath + filename);
                 return texture;
             };
         };
@@ -108,8 +111,8 @@ export class Bob extends FBXModel {
                     }
                 }
             });
-
             this.idle();
+            this.game.introManager.deregisterLoadingObject(this);
         });
         super.load(scene, loadingManager);
     }

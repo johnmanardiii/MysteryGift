@@ -174,7 +174,7 @@ class Game {
         const modelPath = window.location.hostname === 'localhost'
         ? '/models/fbx/bobdance.fbx'             // Local development
         : '/MysteryGift/models/fbx/bobdance.fbx'; // Production/GitHub Pages
-        this.bob = new Bob(modelPath);
+        this.bob = new Bob(modelPath, this);
         this.addGameObject(this.bob);
         this.bob.load(this.scene, this.loadingManager);
 

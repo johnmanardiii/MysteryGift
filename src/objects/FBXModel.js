@@ -3,9 +3,10 @@ import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import { GameObject } from './GameObject.js'; 
 
 export class FBXModel extends GameObject {
-    constructor(path, options = {}) {
+    constructor(path, game, options = {}) {
         super();
         this.path = path;
+        this.game = game;
         this.options = {
             scale: 1,
             position: new THREE.Vector3(0, 0, 0),
@@ -75,6 +76,7 @@ export class FBXModel extends GameObject {
 
     load(scene, loadingManager) {
         const loader = new FBXLoader(loadingManager);
+        this.game.introManager.registerLoadingObject(this);
         
         loader.load(this.path, (fbx) => {
             this.mesh = fbx;
@@ -109,6 +111,7 @@ export class FBXModel extends GameObject {
     
             scene.add(this.mesh);
             this.isLoaded = true;
+            this.game.introManager.deregisterLoadingObject(this);
             
             if (this.onLoadCallback) {
                 this.onLoadCallback(this);
