@@ -49,11 +49,17 @@ export class AudioManager extends GameObject {
         
         // Load all other sounds
         const sounds = {
+            'advance':'advancetext.mp3'
         };
+
+        const base = window.location.hostname === 'localhost'
+        ? '/sounds/'             // Local development
+        : '/MysteryGift/sounds/';
+
 
         // Load each sound
         Object.entries(sounds).forEach(([name, path]) => {
-            this.loadSound(name, path);
+            this.loadSound(name, base + path);
         });
     }
 

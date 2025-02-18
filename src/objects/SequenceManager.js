@@ -55,6 +55,12 @@ export class SequenceManager extends GameObject {
 
     // Execute all components of a beat simultaneously
     executeBeat(beat) {
+        // play a lil sound 
+        if(this.currentStep != 0)
+        {
+            this.game.audioManager.playSound('advance', {volume:.3})
+        }
+        
         // Execute expression changes if specified
         if (beat.expression) {
             if (beat.expression.eyes) {
