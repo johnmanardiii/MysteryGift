@@ -5,13 +5,11 @@ export class AudioManager extends GameObject {
     constructor(game) {
         super();
         this.game = game;
-        this.listener = new THREE.AudioListener();
-        this.sounds = new Map(); // Store all loaded sounds
-        this.currentBGM = null;
-        this.isInitialized = false;
         
-        // Add listener to camera
-        this.game.camera.add(this.listener);
+        // Create listener but don't initialize context yet
+        this.listener = null;
+        this.sounds = new Map(); // Store all sounds
+        this.currentBGM = null;
         
         // Bind methods
         this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
@@ -23,9 +21,40 @@ export class AudioManager extends GameObject {
         window.addEventListener('pagehide', this.handlePageHide);
         window.addEventListener('beforeunload', this.cleanup);
         
-        // Configure loading manager and start loading BGM
+        // Initialize audio system
+        this.init();
+    }
+
+    init() {
+        // Create and resume the audio context during initialization
+        this.listener = new THREE.AudioListener();
+        this.game.camera.add(this.listener);
+        
+        // Ensure the context is resumed
+        const context = this.listener.context;
+        if (context.state === 'suspended') {
+            context.resume();
+        }
+        
+        // Configure loading manager and start loading sounds
         this.audioLoader = new THREE.AudioLoader(this.game.loadingManager);
+        
+        // Load all sounds
+        this.loadAllSounds();
+    }
+
+    loadAllSounds() {
+        // Load background music
         this.loadBackgroundMusic();
+        
+        // Load all other sounds
+        const sounds = {
+        };
+
+        // Load each sound
+        Object.entries(sounds).forEach(([name, path]) => {
+            this.loadSound(name, path);
+        });
     }
 
     loadBackgroundMusic() {
@@ -38,12 +67,11 @@ export class AudioManager extends GameObject {
                 sound.setLoop(true);
                 sound.setVolume(0.4);
                 
-                this.sounds.set('bgm', sound);
+                this.sounds.set('bgm', [sound]); // Store as array for consistency
                 this.currentBGM = sound;
-                this.isInitialized = true;
                 
                 console.log('Background music loaded successfully');
-                this.game.audioManager.playSound("bgm", {volume:.5, loop:true})
+                this.playSound("bgm", { volume: 0.5, loop: true });
             },
             undefined,
             (error) => {
@@ -52,14 +80,23 @@ export class AudioManager extends GameObject {
         );
     }
 
-    loadSound(name, path) {
+    loadSound(name, path, poolSize = 3) {
         const fullPath = this.game.basePath + path;
-        const sound = new THREE.Audio(this.listener);
+        const soundPool = [];
         
+        // Create pool of sounds
+        for (let i = 0; i < poolSize; i++) {
+            const sound = new THREE.Audio(this.listener);
+            soundPool.push(sound);
+        }
+        
+        // Store the pool immediately
+        this.sounds.set(name, soundPool);
+        
+        // Load the buffer once and apply to all sounds in pool
         this.audioLoader.load(fullPath,
             (buffer) => {
-                sound.setBuffer(buffer);
-                this.sounds.set(name, sound);
+                soundPool.forEach(sound => sound.setBuffer(buffer));
                 console.log(`Sound ${name} loaded successfully`);
             },
             undefined,
@@ -67,18 +104,19 @@ export class AudioManager extends GameObject {
                 console.error(`Error loading sound ${name}:`, error);
             }
         );
-        
-        return sound;
     }
 
     playSound(name, options = {}) {
-        const sound = this.sounds.get(name);
-        if (!sound) {
+        const soundPool = this.sounds.get(name);
+        if (!soundPool) {
             console.warn(`Sound "${name}" not found`);
             return;
         }
 
         const { loop = false, volume = 1.0 } = options;
+        
+        // Find available sound in pool (or use first one if all are playing)
+        const sound = soundPool.find(s => !s.isPlaying) || soundPool[0];
         
         sound.setLoop(loop);
         sound.setVolume(volume);
@@ -90,36 +128,35 @@ export class AudioManager extends GameObject {
         sound.play();
     }
 
-    playBackgroundMusic() {
-        if (!this.currentBGM) {
-            console.warn('No background music loaded');
-            return;
-        }
-
-        if (!this.currentBGM.isPlaying) {
-            this.currentBGM.play();
-        }
-    }
-
-    stopBackgroundMusic() {
-        if (this.currentBGM && this.currentBGM.isPlaying) {
-            this.currentBGM.stop();
-        }
-    }
-
-    pauseAllSounds() {
-        this.sounds.forEach(sound => {
+    stopSound(name) {
+        const soundPool = this.sounds.get(name);
+        if (!soundPool) return;
+        
+        soundPool.forEach(sound => {
             if (sound.isPlaying) {
-                sound.pause();
+                sound.stop();
             }
         });
     }
 
+    pauseAllSounds() {
+        this.sounds.forEach(soundPool => {
+            soundPool.forEach(sound => {
+                if (sound.isPlaying) {
+                    sound.pause();
+                }
+            });
+        });
+    }
+
     resumeAllSounds() {
-        this.sounds.forEach(sound => {
-            if (sound.buffer && !sound.isPlaying) {
-                sound.play();
-            }
+        this.sounds.forEach(soundPool => {
+            soundPool.forEach(sound => {
+                if (sound.buffer && !sound.isPlaying && sound.loop) {
+                    // Only auto-resume looping sounds
+                    sound.play();
+                }
+            });
         });
     }
 
@@ -137,11 +174,13 @@ export class AudioManager extends GameObject {
 
     cleanup() {
         // Stop and disconnect all sounds
-        this.sounds.forEach(sound => {
-            if (sound.isPlaying) {
-                sound.stop();
-            }
-            sound.disconnect();
+        this.sounds.forEach(soundPool => {
+            soundPool.forEach(sound => {
+                if (sound.isPlaying) {
+                    sound.stop();
+                }
+                sound.disconnect();
+            });
         });
 
         // Clear the sounds map
@@ -159,9 +198,10 @@ export class AudioManager extends GameObject {
     }
 
     fadeIn(name, duration = 2.0) {
-        const sound = this.sounds.get(name);
-        if (!sound) return;
+        const soundPool = this.sounds.get(name);
+        if (!soundPool || !soundPool[0]) return;
 
+        const sound = soundPool[0];
         sound.setVolume(0);
         sound.play();
         
@@ -181,9 +221,10 @@ export class AudioManager extends GameObject {
     }
 
     fadeOut(name, duration = 0.5) {
-        const sound = this.sounds.get(name);
-        if (!sound) return;
+        const soundPool = this.sounds.get(name);
+        if (!soundPool || !soundPool[0]) return;
 
+        const sound = soundPool[0];
         const startVolume = sound.getVolume();
         const startTime = Date.now();
         

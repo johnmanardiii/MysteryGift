@@ -121,6 +121,8 @@ export class IntroManager extends GameObject {
         this.clicked = true;
         
         // Start the transition
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        console.log('Audio context state:', audioContext.state);
         this.game.audioManager = new AudioManager(this.game);
         this.startTransition();
     }

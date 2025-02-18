@@ -133,7 +133,7 @@ class Game {
                 // sound: "greeting"
             },
             {
-                text: "[#01700c]John[/] can’t stop talking about that game!",
+                text: "[#01700c]John[/] can’t stop talking about it!",
                 expression: { eyes: "happy", mouth: "smile3" },
                 // sound: "greeting"
             },
