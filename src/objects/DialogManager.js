@@ -301,6 +301,74 @@ export class DialogManager extends GameObject {
         }
     }
 
+    fadeOut(fadeDelay = 0, onComplete = null) {
+        // Store animation timing parameters
+        this.fadeStartDelay = fadeDelay;
+        this.initialDelay = fadeDelay;
+        this.delayProgress = 0;
+        this.onFadeOutComplete = onComplete;
+        
+        // Set fading state
+        this.isFading = true;
+        this.fadeProgress = 0;
+        this.fadingOut = true;  // New flag to track fade direction
+        
+        // Stop any ongoing text animation
+        this.isAnimating = false;
+        this.forceStopAnimating = true;
+    }
+    
+    // Updated updateFadeAnimation to properly handle both directions
+    updateFadeAnimation(deltaTime) {
+        if (!this.isFading) return;
+    
+        // Handle initial delay
+        if (this.delayProgress < this.initialDelay) {
+            this.delayProgress += deltaTime;
+            return;
+        }
+    
+        this.fadeProgress += deltaTime;
+        const alpha = Math.min((this.fadeProgress) / this.fadeDuration, 1.0);
+        
+        // Use fadingOut flag to determine opacity direction
+        const opacity = this.fadingOut ? (1 - alpha) : alpha;
+        
+        // Update sprite opacities
+        if (this.sprite) {
+            this.sprite.material.opacity = opacity;
+        }
+        if (this.textSprite) {
+            this.textSprite.material.opacity = opacity;
+        }
+        
+        // Check if fade is complete
+        if (this.fadeProgress >= this.fadeDuration) {
+            this.isFading = false;
+            
+            if (this.fadingOut) {
+                // Fade out complete
+                this.hide();
+                if (typeof this.onFadeOutComplete === 'function') {
+                    this.onFadeOutComplete();
+                }
+                this.fadingOut = false;  // Reset the flag
+            } else {
+                // Fade in complete
+                setTimeout(() => {
+                    this.forceStopAnimating = false;
+                    this.timeAccumulator = 0;
+                    // Only trigger the sequence if this is the initial fade in
+                    if (!this.hasStartedOnce) {
+                        this.game.sequenceManager.playSequence('intro');
+                        this.hasStartedOnce = true;
+                    }
+                }, this.textStartDelay * 1000);
+            }
+        }
+    }
+    
+    // Update your fadeIn method to include the new flag
     fadeIn(initialMessage = 'Hello! This is a test message...', fadeDelay = 0, textDelay = 0.5) {
         // Store animation timing parameters
         this.fadeStartDelay = fadeDelay;
@@ -312,9 +380,9 @@ export class DialogManager extends GameObject {
         this.show();
         this.isFading = true;
         this.fadeProgress = 0;
+        this.fadingOut = false;  // Set flag for fade in
         
         // Initialize the text but don't start animating yet
-        
         this.setText(initialMessage);
         this.displayedText = '';
         this.charIndex = 0;
@@ -327,39 +395,6 @@ export class DialogManager extends GameObject {
         }
         if (this.textSprite) {
             this.textSprite.material.opacity = 0;
-        }
-    }
-
-    updateFadeAnimation(deltaTime) {
-        if (!this.isFading) return;
-
-        // Handle initial delay
-        if (this.delayProgress < this.initialDelay) {
-            this.delayProgress += deltaTime;
-            return;
-        }
-
-        this.fadeProgress += deltaTime;
-        const alpha = Math.min((this.fadeProgress) / this.fadeDuration, 1.0);
-        
-        // Fade in the sprites
-        if (this.sprite) {
-            this.sprite.material.opacity = alpha;
-        }
-        if (this.textSprite) {
-            this.textSprite.material.opacity = alpha;
-        }
-        
-        // Check if fade is complete
-        if (this.fadeProgress >= this.fadeDuration) {
-            this.isFading = false;
-            
-            // Schedule text animation to start after textStartDelay
-            setTimeout(() => {
-                this.forceStopAnimating = false;
-                this.timeAccumulator = 0;
-                this.game.sequenceManager.playSequence('intro');
-            }, this.textStartDelay * 1000);
         }
     }
     
@@ -432,8 +467,8 @@ export class TextArrow extends GameObject {
         this.amplitude = 0.05;
         
         // Transition properties - much more damped now
-        this.currentScale = 0.5;
-        this.targetScale = 0.5;
+        this.currentScale = 0.2;
+        this.targetScale = 0.2;
         this.scaleVelocity = 0;
         this.scaleDamping = 0.4;  // Increased from 0.2
         this.scaleSpringStrength = 0.15; // Reduced from 0.3
@@ -481,7 +516,7 @@ export class TextArrow extends GameObject {
         if (this.sprite) {
             const normalizedScale = this.currentScale / 0.5;
             this.sprite.scale.set(this.currentScale, this.currentScale, 1);
-            this.sprite.material.opacity = normalizedScale;
+            this.sprite.material.opacity = 1;
             this.sprite.visible = normalizedScale > 0.01;
         }
     }
@@ -496,7 +531,7 @@ export class TextArrow extends GameObject {
         const height = 2.7 * Math.tan(vFov / 2) * distance;
         const width = height * camera.aspect;
         
-        const yOffset = height / 2 - 2.5;
+        const yOffset = height / 2 - 3.2;
         const zPos = camera.position.z - distance;
         
         this.sprite.position.set(
@@ -514,7 +549,7 @@ export class TextArrow extends GameObject {
                          !this.dialogManager.forceStopAnimating &&
                          !this.forceHidden;
 
-        this.targetScale = shouldShow ? 0.5 : 0;
+        this.targetScale = shouldShow ? 0.2 : 0;
         this.updateScale(deltaTime);
 
         if (this.currentScale > 0.01) {

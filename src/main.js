@@ -133,7 +133,7 @@ class Game {
                 // sound: "greeting"
             },
             {
-                text: "[#01700c]John[/] can’t stop talking about it!",
+                text: "[#01700c]John[/] can’t stop talking about that one!",
                 expression: { eyes: "happy", mouth: "smile3" },
                 // sound: "greeting"
             },
@@ -158,7 +158,27 @@ class Game {
                 // sound: "greeting"
             },
             {
-                text: "Let's dance!",
+                text: "ayyy yuh ayyy yah aayyyyy yuh imma throw that shit back!",
+                expression: { eyes: "very_happy", mouth: "smile2" },
+                animation: { type: "dance" },
+                // sound: "music"
+            }
+        ]);
+    }
+
+    setupSequenceManagerDemo()
+    {
+        this.sequenceManager = new SequenceManager(this);
+
+        // Register a sequence:
+        this.sequenceManager.registerSequence('intro', [
+            // part where he turns around all bored
+            {
+                text:"...    ",
+                // animation: {type: "turn_around"},
+            },
+            {
+                text: "ayyy yuh ayyy yah aayyyyy yuh imma throw that shit back!",
                 expression: { eyes: "very_happy", mouth: "smile2" },
                 animation: { type: "dance" },
                 // sound: "music"

@@ -36,7 +36,7 @@ export class SequenceManager extends GameObject {
     stopCurrentSequence() {
         this.isPlaying = false;
         this.currentSequence = null;
-        this.currentStep = 0;
+        // this.currentStep = 0;
     }
 
     // Play the next step in the sequence
@@ -44,6 +44,8 @@ export class SequenceManager extends GameObject {
         if (!this.isPlaying || !this.currentSequence) return;
 
         if (this.currentStep >= this.currentSequence.length) {
+            this.game.dialogManager.arrow.forceHide();
+            this.game.dialogManager.fadeOut(0.0);
             this.stopCurrentSequence();
             return;
         }
