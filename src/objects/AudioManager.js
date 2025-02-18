@@ -55,7 +55,7 @@ export class AudioManager extends GameObject {
 
         const base = window.location.hostname === 'localhost'
         ? '/sounds/'             // Local development
-        : '/MysteryGift/sounds/';
+        : '/sounds/';
 
 
         // Load each sound
