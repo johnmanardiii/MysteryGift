@@ -148,7 +148,7 @@ class Game {
                 // sound: "greeting"
             },
             {
-                text: "You da bes [#0066CC]Fiona[/] and you bring good people together.",
+                text: "You da bes [#0066CC]Fiona[/] and you bring some amazing people together.",
                 expression: { eyes: "happy", mouth: "smile2" },
                 // sound: "greeting"
             },
@@ -158,7 +158,7 @@ class Game {
                 // sound: "greeting"
             },
             {
-                text: "ayyy yuh ayyy yah aayyyyy yuh imma throw that shit back!",
+                text: "ayyy yuh ayyy yah aayyyyy yuh imma throw it back!",
                 expression: { eyes: "very_happy", mouth: "smile2" },
                 animation: { type: "dance" },
                 // sound: "music"
