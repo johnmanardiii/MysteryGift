@@ -125,7 +125,6 @@ class Game {
             {
                 text: "It's a Microsoft code thingy for games and stuff.",
                 expression: { eyes: "closed", mouth: "smile1" },
-                // sound: "greeting"
             },
             {
                 text: "I hear you can play lots of fun games like [#f21c00]Diablo 4[/],",
@@ -135,7 +134,7 @@ class Game {
             {
                 text: "[#01700c]John[/] can’t stop talking about that one!",
                 expression: { eyes: "happy", mouth: "smile3" },
-                // sound: "greeting"
+                sound:{id:"pleased", volume:1, loop:false, delay:1}
             },
             {
                 text: "And you can get all the [#f21c00]Valorant[/] agents or whatever, pthhpth!",
@@ -161,7 +160,7 @@ class Game {
                 text: "ayyy yuh ayyy yah aayyyyy yuh imma throw it back!",
                 expression: { eyes: "very_happy", mouth: "smile2" },
                 animation: { type: "dance" },
-                // sound: "music"
+                sound:{id:"dance", volume:1, loop:true, delay:0, stopBgm:true}
             }
         ]);
     }
@@ -178,10 +177,10 @@ class Game {
                 // animation: {type: "turn_around"},
             },
             {
-                text: "ayyy yuh ayyy yah aayyyyy yuh imma throw that shit back!",
+                text: "ayyy yuh ayyy yah aayyyyy yuh imma throw it back!",
                 expression: { eyes: "very_happy", mouth: "smile2" },
                 animation: { type: "dance" },
-                // sound: "music"
+                sound:{id:"dance", volume:1, loop:false, delay:1, stopBgm:true}
             }
         ]);
     }
@@ -208,7 +207,7 @@ class Game {
         
         // sequence manager depends on a lot of stuff, so wait for everything to load:
         this.loadingManager.onLoad = () => {
-            this.setupSequenceManager();
+            // this.setupSequenceManagerDemo();
         }
     }
 

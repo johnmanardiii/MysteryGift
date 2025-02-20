@@ -105,6 +105,14 @@ export class FBXModel extends GameObject {
                         });
                         child.material = basicMaterial;
                     }
+                    else {
+                        const basicMaterial = new THREE.MeshPhongMaterial({
+                            map: child.material.map,
+                            transparent: true,
+                            side: THREE.DoubleSide
+                        });
+                        child.material = basicMaterial;
+                    }
                     console.log('Mesh name:', child.name);
                 }
             });

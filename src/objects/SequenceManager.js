@@ -90,10 +90,23 @@ export class SequenceManager extends GameObject {
 
         // Play sound if specified
         if (beat.sound) {
-            this.game.audioManager.playSound(beat.sound.id, {
-                loop: beat.sound.loop,
-                volume: beat.sound.volume
-            });
+            if(beat.sound.stopBgm)
+            {
+                this.game.audioManager.stopSound('bgm');
+            }
+            if (beat.sound.delay) {
+                setTimeout(() => {
+                    this.game.audioManager.playSound(beat.sound.id, {
+                        loop: beat.sound.loop,
+                        volume: beat.sound.volume
+                    });
+                }, beat.sound.delay * 1000); // Convert delay from seconds to milliseconds
+            } else {
+                this.game.audioManager.playSound(beat.sound.id, {
+                    loop: beat.sound.loop,
+                    volume: beat.sound.volume
+                });
+            }
         }
     
         // Set dialogue

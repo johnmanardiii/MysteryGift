@@ -50,7 +50,9 @@ export class AudioManager extends GameObject {
         // Load all other sounds
         const sounds = {
             'advance':'advancetext.mp3',
-            'startup':'startupsound.mp3'
+            'startup':'startupsound.mp3',
+            'pleased':'pleased.mp3',
+            'dance':'dance.mp3'
         };
 
         const base = window.location.hostname === 'localhost'
