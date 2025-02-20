@@ -207,7 +207,7 @@ class Game {
         
         // sequence manager depends on a lot of stuff, so wait for everything to load:
         this.loadingManager.onLoad = () => {
-            // this.setupSequenceManagerDemo();
+            this.setupSequenceManager();
         }
     }
 
